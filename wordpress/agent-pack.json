@@ -1,0 +1,142 @@
+{
+  "schema": "lucidit-agent-pack-v1",
+  "name": "o-matic-wordpress-factory",
+  "version": "1.2.4",
+  "display_name": "O-Matic WordPress Factory",
+  "release": {
+    "channel": "stable",
+    "tags": [
+      "stable"
+    ],
+    "latest": true
+  },
+  "owner": {
+    "name": "lucidIT-LLC",
+    "url": "https://github.com/lucidIT-LLC"
+  },
+  "homepage": "https://o-matic.ai",
+  "repository": "https://github.com/lucidIT-LLC/o-matic-wordpress-factory",
+  "license": "MIT",
+  "description": "Host-aware WordPress and Elementor MCP plugin with bundled brand, build, writing, and visual skills.",
+  "canonical_format": {
+    "type": "mcp_plugin_with_markdown_skills",
+    "mcp_servers": [
+      "server/index.mjs",
+      "server/elementor.mjs"
+    ],
+    "codex_mcp_manifest": ".mcp.json",
+    "skill_contract": "Markdown SKILL.md",
+    "contract": "The MCP servers are the canonical WordPress and Elementor tool surfaces. Bundled SKILL.md files are canonical prompt contracts and must not fork per platform.",
+    "helper_scripts": {
+      "sync_bundled_skills": "scripts/sync-bundled-skills.mjs"
+    }
+  },
+  "compatibility": {
+    "mcp_hosts": {
+      "status": "full",
+      "hosts": [
+        "codex",
+        "claude-code",
+        "cowork-with-mcp-config"
+      ],
+      "notes": "Full operation requires an MCP-capable host that can launch the WordPress and Elementor connector servers and provide project credentials or profile config."
+    },
+    "prompt_only_hosts": {
+      "status": "limited",
+      "hosts": [
+        "google-gemini",
+        "ollama",
+        "generic-chat"
+      ],
+      "notes": "Prompt-only hosts can load bundled skills as behavior instructions, but cannot perform WordPress or Elementor actions unless connected through an external MCP bridge or separate tool adapter."
+    }
+  },
+  "adapters": {
+    "claude": {
+      "plugin_manifest": ".claude-plugin/plugin.json",
+      "marketplace": ".claude-plugin/marketplace.json",
+      "notes": "Claude Code plugin manifest starts MCP servers and loads bundled skills."
+    },
+    "codex": {
+      "plugin_manifest": ".codex-plugin/plugin.json",
+      "marketplace": ".agents/plugins/marketplace.json",
+      "mcp_manifest": ".mcp.json",
+      "notes": "Codex plugin manifest loads skills and .mcp.json starts the MCP servers."
+    },
+    "cowork": {
+      "type": "mcp_desktop_config",
+      "notes": "Use the same server entry points with explicit WordPress or Elementor environment variables/profile config."
+    },
+    "google": {
+      "type": "system_instruction",
+      "notes": "Use a bundled SKILL.md body as the system instruction for planning/review behavior. No site tools are available without an MCP bridge."
+    },
+    "ollama": {
+      "type": "modelfile_system_prompt",
+      "notes": "Build a Modelfile from a bundled SKILL.md for local prompt behavior. No site tools are available unless the local app wraps Ollama with MCP/tool calls."
+    },
+    "generic": {
+      "type": "system_prompt",
+      "notes": "Load the selected SKILL.md as a system/developer instruction. Treat WordPress and Elementor actions as unavailable unless the runtime provides matching tools."
+    }
+  },
+  "skills": [
+    {
+      "id": "brandy",
+      "display_name": "Brandy",
+      "canonical_skill": "skills/wp-factory-brandy/SKILL.md",
+      "mode": "brand creator and guardian",
+      "version": "7.4.0",
+      "release": {
+        "channel": "stable",
+        "tags": [
+          "stable"
+        ],
+        "latest": true
+      }
+    },
+    {
+      "id": "carver",
+      "display_name": "Carver",
+      "canonical_skill": "skills/wp-factory-carver/SKILL.md",
+      "mode": "polyglot technical builder",
+      "version": "7.4.0",
+      "release": {
+        "channel": "stable",
+        "tags": [
+          "stable"
+        ],
+        "latest": true
+      }
+    },
+    {
+      "id": "jo",
+      "display_name": "Jo",
+      "canonical_skill": "skills/jo/SKILL.md",
+      "mode": "writing coach",
+      "version": "4.0.2",
+      "signature": 5,
+      "release": {
+        "channel": "stable",
+        "tags": [
+          "stable"
+        ],
+        "latest": true
+      }
+    },
+    {
+      "id": "monet",
+      "display_name": "Monet",
+      "canonical_skill": "skills/wp-factory-monet/SKILL.md",
+      "mode": "visual systems designer",
+      "version": "4.3.0",
+      "release": {
+        "channel": "stable",
+        "tags": [
+          "stable"
+        ],
+        "latest": true
+      }
+    }
+  ]
+}

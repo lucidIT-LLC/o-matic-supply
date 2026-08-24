@@ -1,0 +1,14 @@
+{
+  "name": "o-matic-supply",
+  "description": "o-MATIC Supply \u2014 tools, not people. The WordPress and Elementor MCP connectors: site and content operations, Elementor page building, template and theme work, media, and a sandboxed export/import path. Ships MCP servers by design; it is equipment, not staff.",
+  "plugins": [
+    {
+      "name": "wordpress",
+      "source": {
+        "type": "local",
+        "path": "./wordpress"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

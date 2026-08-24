@@ -1,0 +1,25 @@
+{
+  "name": "o-matic-elementor-connector",
+  "display_name": "O-Matic Elementor Connector",
+  "version": "0.1.0",
+  "description": "Configurable Elementor MCP connector for O-Matic website work.",
+  "entrypoint": {
+    "type": "stdio",
+    "command": "node",
+    "args": [
+      "${MCPB_PLUGIN_ROOT}/server/elementor.mjs"
+    ],
+    "env": {
+      "OMATIC_PROJECT_ROOT": "${MCPB_PROJECT_ROOT}",
+      "OMATIC_ELEMENTOR_FACTORY_CONFIG": "${OMATIC_ELEMENTOR_FACTORY_CONFIG}",
+      "OMATIC_ELEMENTOR_FACTORY_PROFILE": "default",
+      "OMATIC_ELEMENTOR_URL": "${OMATIC_ELEMENTOR_URL}",
+      "OMATIC_ELEMENTOR_USERNAME": "${OMATIC_ELEMENTOR_USERNAME}",
+      "OMATIC_ELEMENTOR_APP_PASSWORD": "${OMATIC_ELEMENTOR_APP_PASSWORD}",
+      "OMATIC_ELEMENTOR_MCP_PATH": "${OMATIC_ELEMENTOR_MCP_PATH}",
+      "OMATIC_ELEMENTOR_REST_API_ROOT": "${OMATIC_ELEMENTOR_REST_API_ROOT}",
+      "OMATIC_ELEMENTOR_TIMEOUT_MS": "${OMATIC_ELEMENTOR_TIMEOUT_MS}",
+      "MCP_PROTOCOL_VERSION": "2025-06-18"
+    }
+  }
+}

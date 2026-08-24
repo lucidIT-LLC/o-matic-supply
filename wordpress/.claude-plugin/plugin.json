@@ -1,0 +1,57 @@
+{
+  "name": "wordpress",
+  "version": "1.3.0",
+  "license": "MIT",
+  "description": "O-Matic WordPress Factory plugin with bundled brand, build, writing, and visual skills plus separate configurable WordPress and Elementor MCP connectors.",
+  "author": {
+    "name": "James Walker",
+    "url": "https://o-matic.ai"
+  },
+  "homepage": "https://o-matic.ai",
+  "keywords": [
+    "omatic",
+    "wordpress",
+    "mcp",
+    "websites",
+    "claude-code"
+  ],
+  "mcpServers": {
+    "o-matic-wordpress-connector": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/server/index.mjs"
+      ],
+      "env": {
+        "OMATIC_PROJECT_ROOT": "${CLAUDE_PROJECT_DIR}",
+        "OMATIC_WORDPRESS_FACTORY_CONFIG": "${OMATIC_WORDPRESS_FACTORY_CONFIG}",
+        "OMATIC_WORDPRESS_FACTORY_PROFILE": "default",
+        "OMATIC_WP_URL": "${OMATIC_WP_URL}",
+        "OMATIC_WP_USERNAME": "${OMATIC_WP_USERNAME}",
+        "OMATIC_WP_APP_PASSWORD": "${OMATIC_WP_APP_PASSWORD}",
+        "OMATIC_WP_MCP_PATH": "${OMATIC_WP_MCP_PATH}",
+        "OMATIC_WP_REST_API_ROOT": "${OMATIC_WP_REST_API_ROOT}",
+        "OMATIC_WP_TIMEOUT_MS": "${OMATIC_WP_TIMEOUT_MS}",
+        "MCP_PROTOCOL_VERSION": "2025-06-18"
+      }
+    },
+    "o-matic-elementor-connector": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/server/elementor.mjs"
+      ],
+      "env": {
+        "OMATIC_PROJECT_ROOT": "${CLAUDE_PROJECT_DIR}",
+        "OMATIC_ELEMENTOR_FACTORY_CONFIG": "${OMATIC_ELEMENTOR_FACTORY_CONFIG}",
+        "OMATIC_ELEMENTOR_FACTORY_PROFILE": "default",
+        "OMATIC_ELEMENTOR_URL": "${OMATIC_ELEMENTOR_URL}",
+        "OMATIC_ELEMENTOR_USERNAME": "${OMATIC_ELEMENTOR_USERNAME}",
+        "OMATIC_ELEMENTOR_APP_PASSWORD": "${OMATIC_ELEMENTOR_APP_PASSWORD}",
+        "OMATIC_ELEMENTOR_MCP_PATH": "${OMATIC_ELEMENTOR_MCP_PATH}",
+        "OMATIC_ELEMENTOR_REST_API_ROOT": "${OMATIC_ELEMENTOR_REST_API_ROOT}",
+        "OMATIC_ELEMENTOR_TIMEOUT_MS": "${OMATIC_ELEMENTOR_TIMEOUT_MS}",
+        "MCP_PROTOCOL_VERSION": "2025-06-18"
+      }
+    }
+  },
+  "displayName": "o-MATIC Supply \u2014 WordPress & Elementor"
+}

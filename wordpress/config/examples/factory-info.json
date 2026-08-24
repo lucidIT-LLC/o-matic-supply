@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "connector": "wordpress",
+  "profiles": {
+    "default": {
+      "siteUrl": "https://example.com",
+      "username": "admin",
+      "applicationPassword": "[example-redacted-application-password]",
+      "mcpPath": "/wp-json/mcp/mcp-adapter-default-server",
+      "restApiRoot": "https://example.com/wp-json/",
+      "wordpressVersion": "7.0",
+      "lastVerifiedAt": "2026-06-13T00:00:00.000Z",
+      "mcp": {
+        "verifiedAt": "2026-06-13T00:00:00.000Z",
+        "ok": true,
+        "endpoint": "https://example.com/wp-json/mcp/mcp-adapter-default-server",
+        "toolCount": 8,
+        "toolNames": [
+          "mcp_adapter_discover_abilities",
+          "mcp_adapter_execute_ability"
+        ],
+        "tools": [
+          {
+            "name": "mcp_adapter_discover_abilities",
+            "description": "Example cached WordPress MCP ability discovery tool.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          {
+            "name": "mcp_adapter_execute_ability",
+            "description": "Example cached WordPress MCP ability execution tool.",
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        ],
+        "capabilityGroups": [
+          {
+            "id": "abilities_adapter",
+            "label": "WordPress abilities discovery and execution",
+            "required": false,
+            "available": true,
+            "matchedTools": [
+              "mcp_adapter_discover_abilities",
+              "mcp_adapter_execute_ability"
+            ]
+          }
+        ],
+        "requiredCapabilitiesMissing": []
+      },
+      "createdAt": "2026-06-13T00:00:00.000Z",
+      "updatedAt": "2026-06-13T00:00:00.000Z"
+    }
+  }
+}

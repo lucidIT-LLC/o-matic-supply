@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+coverage/
+*.log
+.omatic/wordpress-factory.json
+.omatic/wordpress-factory.json.*.tmp
