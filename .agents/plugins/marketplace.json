@@ -5,7 +5,7 @@
     {
       "name": "wordpress",
       "source": {
-        "type": "local",
+        "source": "local",
         "path": "./wordpress"
       },
       "category": "Productivity"
