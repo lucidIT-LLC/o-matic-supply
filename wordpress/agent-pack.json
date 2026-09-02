@@ -1,7 +1,7 @@
 {
   "schema": "lucidit-agent-pack-v1",
   "name": "o-matic-wordpress-factory",
-  "version": "1.2.4",
+  "version": "1.3.1",
   "display_name": "O-Matic WordPress Factory",
   "release": {
     "channel": "stable",
@@ -80,63 +80,6 @@
       "notes": "Load the selected SKILL.md as a system/developer instruction. Treat WordPress and Elementor actions as unavailable unless the runtime provides matching tools."
     }
   },
-  "skills": [
-    {
-      "id": "brandy",
-      "display_name": "Brandy",
-      "canonical_skill": "skills/wp-factory-brandy/SKILL.md",
-      "mode": "brand creator and guardian",
-      "version": "7.4.0",
-      "release": {
-        "channel": "stable",
-        "tags": [
-          "stable"
-        ],
-        "latest": true
-      }
-    },
-    {
-      "id": "carver",
-      "display_name": "Carver",
-      "canonical_skill": "skills/wp-factory-carver/SKILL.md",
-      "mode": "polyglot technical builder",
-      "version": "7.4.0",
-      "release": {
-        "channel": "stable",
-        "tags": [
-          "stable"
-        ],
-        "latest": true
-      }
-    },
-    {
-      "id": "jo",
-      "display_name": "Jo",
-      "canonical_skill": "skills/jo/SKILL.md",
-      "mode": "writing coach",
-      "version": "4.0.2",
-      "signature": 5,
-      "release": {
-        "channel": "stable",
-        "tags": [
-          "stable"
-        ],
-        "latest": true
-      }
-    },
-    {
-      "id": "monet",
-      "display_name": "Monet",
-      "canonical_skill": "skills/wp-factory-monet/SKILL.md",
-      "mode": "visual systems designer",
-      "version": "4.3.0",
-      "release": {
-        "channel": "stable",
-        "tags": [
-          "stable"
-        ],
-        "latest": true
-      }
-    }
-  ]
+  "skills": [],
+  "bundled_skills_note": "Supply ships TOOLS, not people. Brandy, Carver, Jo, Monet and Pixel moved to o-MATIC Studio because a plugin declaring an mcpServers block is omitted by hosted-marketplace hosts - bundling them here once cost four agents on restricted hosts. Do not re-add them: two copies at two versions with no authority is the failure this split fixed."
 }

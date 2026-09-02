@@ -14,7 +14,7 @@
       "name": "wordpress",
       "displayName": "o-MATIC Supply \u2014 WordPress & Elementor",
       "source": "./wordpress",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "description": "o-MATIC Supply \u2014 tools, not people. The WordPress and Elementor MCP connectors: site and content operations, Elementor page building, template and theme work, media, and a sandboxed export/import path. Ships MCP servers by design; it is equipment, not staff.",
       "author": {
         "name": "James Walker",
