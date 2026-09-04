@@ -1,3 +1,11 @@
+<p align="center">
+  <img src=".github/brand/omatic-wordmark.png" width="240" alt="o-MATIC" />
+</p>
+
+<p align="center">
+  Built by <a href="https://o-matic.ai">O-MATIC</a>, the AI research division of <a href="https://lucidit.io">LucidIT, LLC</a>.
+</p>
+
 # o-MATIC Supply
 
 **Tools, not people.**

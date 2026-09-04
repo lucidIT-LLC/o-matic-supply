@@ -235,7 +235,7 @@ The refresh token is stored in the **macOS Keychain** via the `security` CLI, un
 
 - Never written to a file.
 - Never logged, and never included in an error message — every string leaving the process passes
-  through a redaction filter (`src/util/redact.ts`) as defence in depth.
+  through a redaction filter (`src/util/redact.ts`) as defense in depth.
 - Behind a `TokenStore` interface (`get` / `set` / `delete`), so a Linux Secret Service or
   Windows Credential Manager backend can be added without touching the auth code.
 
@@ -368,7 +368,7 @@ resolved, in both directions.
 - Read, create and update SharePoint list items.
 - Read and write real, richly formatted OneNote pages — colors, styling, tables, inline images and
   file attachments, not flat text.
-- Survive rate limiting: 429 with `Retry-After` honoured, 5xx retried with exponential backoff,
+- Survive rate limiting: 429 with `Retry-After` honored, 5xx retried with exponential backoff,
   `@odata.nextLink` followed to the last page so nothing is silently truncated.
 
 **Cannot**
@@ -404,7 +404,7 @@ npm test            # build, then node --test over dist/test
 Tests use the built-in `node:test` runner — no test framework dependency. They cover the
 progress mapping, checklist read-modify-write and delta correctness, the ETag staleness path
 (including a mocked 412 and proof the task and details ETags are never interchanged), the
-pagination follower, retry/rate-limit behaviour, the device-code and refresh flows against a
+pagination follower, retry/rate-limit behavior, the device-code and refresh flows against a
 stubbed token endpoint, and configuration failure messages. No test performs a live Graph call.
 
 ```
