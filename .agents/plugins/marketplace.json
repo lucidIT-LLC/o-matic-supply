@@ -9,6 +9,14 @@
         "path": "./wordpress"
       },
       "category": "Productivity"
+    },
+    {
+      "name": "microsoft-365",
+      "source": {
+        "source": "local",
+        "path": "./microsoft-365"
+      },
+      "category": "Productivity"
     }
   ]
 }

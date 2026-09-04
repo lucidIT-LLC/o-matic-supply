@@ -1,0 +1,35 @@
+{
+  "name": "team-assistant-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Team Assistant \u2014 an MCP server giving an AI assistant governed read/write access to a team's work in Microsoft Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.10.0"
+  },
+  "bin": {
+    "team-assistant-mcp": "dist/src/index.js"
+  },
+  "main": "dist/src/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
+    "start": "node dist/src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "typescript": "^5.9.2"
+  }
+}

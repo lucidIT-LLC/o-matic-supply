@@ -37,6 +37,37 @@
         "declaredUnder": "known_rules #284 (compatibility gate, halt)",
         "note": "Restricted hosts that omit mcpServers plugins will not install this pack. That is expected: a connector without an MCP server is nothing. The PEOPLE who use these tools ship separately in o-MATIC Studio, which is why they are no longer bundled together."
       }
+    },
+    {
+      "name": "microsoft-365",
+      "displayName": "o-MATIC Supply \u2014 Team Assistant (Microsoft 365)",
+      "source": "./microsoft-365",
+      "version": "0.1.0",
+      "description": "Team Assistant MCP: governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted per tenant with delegated device-code sign-in \u2014 no central service, no admin-consent-for-others. Premium Planner / Dataverse (\"Project\") is deliberately out of scope, a separate plugin.",
+      "author": {
+        "name": "James Walker",
+        "url": "https://o-matic.ai"
+      },
+      "homepage": "https://o-matic.ai",
+      "license": "MIT",
+      "category": "Productivity",
+      "keywords": [
+        "microsoft-365",
+        "graph",
+        "planner",
+        "teams",
+        "sharepoint",
+        "onenote",
+        "mcp",
+        "connector",
+        "tools"
+      ],
+      "metadata": {
+        "compatibilityTier": "MCP-host-full-operation ONLY \u2014 this is a tool pack and requires a host that can spawn an MCP server",
+        "shipsMcpServer": true,
+        "requiresForFullOperation": "a host able to launch stdio MCP servers, plus an Entra app registration (tenant ID + client ID) the operator controls",
+        "note": "Delegated device-code sign-in only \u2014 every call acts as the signed-in user, credentials never leave the host. No OneNote application-permission tier exists in Graph at all, so OneNote is delegated-only by Microsoft's own design, not a limitation of this plugin."
+      }
     }
   ]
 }

@@ -1,0 +1,37 @@
+{
+  "name": "microsoft-365",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Team Assistant MCP: an AI-native MCP server giving governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted, per-tenant, delegated sign-in — no central service, no admin-consent-for-others.",
+  "author": {
+    "name": "James Walker",
+    "url": "https://o-matic.ai"
+  },
+  "homepage": "https://o-matic.ai",
+  "keywords": [
+    "omatic",
+    "microsoft-365",
+    "graph",
+    "planner",
+    "teams",
+    "sharepoint",
+    "onenote",
+    "mcp",
+    "claude-code"
+  ],
+  "mcpServers": {
+    "team-assistant": {
+      "command": "/bin/sh",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.sh"],
+      "env": {
+        "TEAM_ASSISTANT_TENANT_ID": "${TEAM_ASSISTANT_TENANT_ID}",
+        "TEAM_ASSISTANT_CLIENT_ID": "${TEAM_ASSISTANT_CLIENT_ID}",
+        "TEAM_ASSISTANT_AUTH_MODE": "${TEAM_ASSISTANT_AUTH_MODE}",
+        "TEAM_ASSISTANT_SCOPES": "${TEAM_ASSISTANT_SCOPES}",
+        "TEAM_ASSISTANT_TOKEN_SERVICE": "${TEAM_ASSISTANT_TOKEN_SERVICE}"
+      },
+      "cwd": "${CLAUDE_PLUGIN_ROOT}"
+    }
+  },
+  "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)"
+}

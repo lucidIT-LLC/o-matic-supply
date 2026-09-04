@@ -1,0 +1,15 @@
+# Example only. Prefer configuring this per project, not in the plugin repo.
+# Installing the microsoft-365 plugin from o-MATIC Supply's Codex marketplace
+# does this for you — this file is for a manual/standalone Codex install.
+
+[mcp_servers.team-assistant]
+command = "node"
+args = ["/absolute/path/to/microsoft-365/dist/src/index.js"]
+cwd = "/absolute/path/to/microsoft-365"
+
+[mcp_servers.team-assistant.env]
+TEAM_ASSISTANT_TENANT_ID = ""
+TEAM_ASSISTANT_CLIENT_ID = ""
+TEAM_ASSISTANT_AUTH_MODE = "device-code"
+TEAM_ASSISTANT_SCOPES = ""
+TEAM_ASSISTANT_TOKEN_SERVICE = "team-assistant-mcp"

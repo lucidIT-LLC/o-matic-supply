@@ -1,0 +1,14 @@
+{
+  "team-assistant": {
+    "command": "/bin/sh",
+    "args": ["${PLUGIN_ROOT}/bin/launch.sh"],
+    "env": {
+      "TEAM_ASSISTANT_TENANT_ID": "${TEAM_ASSISTANT_TENANT_ID}",
+      "TEAM_ASSISTANT_CLIENT_ID": "${TEAM_ASSISTANT_CLIENT_ID}",
+      "TEAM_ASSISTANT_AUTH_MODE": "${TEAM_ASSISTANT_AUTH_MODE}",
+      "TEAM_ASSISTANT_SCOPES": "${TEAM_ASSISTANT_SCOPES}",
+      "TEAM_ASSISTANT_TOKEN_SERVICE": "${TEAM_ASSISTANT_TOKEN_SERVICE}"
+    },
+    "cwd": "${PLUGIN_ROOT}"
+  }
+}
