@@ -159,6 +159,8 @@ OMATIC_WP_APP_PASSWORD='xxxx xxxx xxxx xxxx xxxx xxxx'
 OMATIC_WP_MCP_PATH=/wp-json/mcp/mcp-adapter-default-server
 OMATIC_WP_REST_API_ROOT=https://example.com/wp-json/
 OMATIC_WP_TIMEOUT_MS=15000
+OMATIC_WP_TOOL_CALLS_PER_MINUTE=120
+OMATIC_WP_RESPONSE_BODY_LIMIT_BYTES=2097152
 
 OMATIC_ELEMENTOR_URL=https://example.com
 OMATIC_ELEMENTOR_USERNAME=admin
@@ -166,6 +168,8 @@ OMATIC_ELEMENTOR_APP_PASSWORD='xxxx xxxx xxxx xxxx xxxx xxxx'
 OMATIC_ELEMENTOR_MCP_PATH=/wp-json/mcp/emcp-tools-server
 OMATIC_ELEMENTOR_REST_API_ROOT=https://example.com/wp-json/
 OMATIC_ELEMENTOR_TIMEOUT_MS=15000
+OMATIC_ELEMENTOR_TOOL_CALLS_PER_MINUTE=120
+OMATIC_ELEMENTOR_RESPONSE_BODY_LIMIT_BYTES=2097152
 ```
 
 ## Host Support
@@ -176,6 +180,8 @@ OMATIC_ELEMENTOR_TIMEOUT_MS=15000
 - Generic MCP hosts: `config/examples/generic-mcp.json`
 
 Both connector servers speak standard stdio MCP and forward to Streamable HTTP MCP endpoints on the target WordPress site.
+
+The connector applies a bounded, per-process tool-call limit of 120 calls per minute and a 2 MiB upstream response-body limit by default. Set the corresponding `*_TOOL_CALLS_PER_MINUTE` or `*_RESPONSE_BODY_LIMIT_BYTES` environment variable only when a host's governed workload needs a lower or higher limit. A rate-limited call returns a normal MCP tool result with `isError: true`, so the host can see and retry the condition.
 
 ## Development
 

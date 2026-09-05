@@ -7,10 +7,17 @@ import { request as httpsRequest } from "node:https";
 const DEFAULT_PROFILE = "default";
 const DEFAULT_PROTOCOL_VERSION = "2025-06-18";
 const TOOL_CACHE_MS = 10000;
+const DEFAULT_TOOL_CALLS_PER_MINUTE = 120;
+const DEFAULT_RESPONSE_BODY_LIMIT_BYTES = 2 * 1024 * 1024;
 
 export function createConnectorServer(options) {
   const config = normalizeOptions(options);
   const requestTimeoutMs = parseTimeoutMs(envValue(config.env.timeoutMs), 15000);
+  const toolCallsPerMinute = parsePositiveInteger(envValue(config.env.toolCallsPerMinute), DEFAULT_TOOL_CALLS_PER_MINUTE);
+  const responseBodyLimitBytes = parsePositiveInteger(
+    envValue(config.env.responseBodyLimitBytes),
+    DEFAULT_RESPONSE_BODY_LIMIT_BYTES
+  );
   const upstreamProtocolVersion = envValue("MCP_PROTOCOL_VERSION") || DEFAULT_PROTOCOL_VERSION;
   const builtinTools = createBuiltinTools(config);
   const state = {
@@ -18,6 +25,7 @@ export function createConnectorServer(options) {
     sessionId: "",
     upstreamInitializedKey: "",
     toolCache: null,
+    toolCallTimes: [],
     profile: envValue(config.env.profile) || DEFAULT_PROFILE,
   };
 
@@ -112,39 +120,54 @@ export function createConnectorServer(options) {
   }
 
   async function callTool(message) {
-    const name = message.params?.name || "";
-    const args = message.params?.arguments || {};
+    const name = message.params?.name;
+    const args = message.params?.arguments ?? {};
 
-    if (name === `${config.toolBase}_configure`) return textResult(message.id, await configureProfile(args));
-    if (name === `${config.toolBase}_status`) return textResult(message.id, await statusProfile(args));
-    if (name === `${config.toolBase}_forget`) return textResult(message.id, forgetProfile(args));
-    if (name === `${config.toolBase}_list_profiles`) return textResult(message.id, listProfiles(args));
-    if (name === `${config.toolBase}_activate_profile`) return textResult(message.id, activateProfile(args));
-    if (name === `${config.toolBase}_refresh_tools`) return textResult(message.id, await refreshTools(args));
-    if (name === `${config.toolBase}_usage_guide`) return textResult(message.id, usageGuide(args));
+    if (typeof name !== "string" || !name.trim()) return invalidToolCall(message.id, "tools/call requires a non-empty string params.name.");
+    if (!isRecord(args)) return invalidToolCall(message.id, "tools/call params.arguments must be an object when provided.");
 
-    if (!name.startsWith(config.forwardPrefix)) {
-      return {
-        jsonrpc: "2.0",
-        id: message.id,
-        error: {
-          code: -32602,
-          message: `Unknown tool "${name}". ${config.upstreamLabel} tools use the ${config.forwardPrefix} prefix.`,
-        },
-      };
+    if (!consumeToolCall()) {
+      return toolErrorResult(message.id, `Tool-call rate limit reached (${toolCallsPerMinute} calls per minute). Wait and retry.`);
     }
 
-    const active = loadActiveConfig({ allowMissing: false });
-    await ensureUpstreamInitialized(active.profile);
-    return forwardToUpstreamMcp(active.profile, {
-      jsonrpc: "2.0",
-      id: message.id,
-      method: "tools/call",
-      params: {
-        ...message.params,
-        name: name.slice(config.forwardPrefix.length),
-      },
-    });
+    try {
+      if (name === `${config.toolBase}_configure`) return textResult(message.id, await configureProfile(args));
+      if (name === `${config.toolBase}_status`) return textResult(message.id, await statusProfile(args));
+      if (name === `${config.toolBase}_forget`) return textResult(message.id, forgetProfile(args));
+      if (name === `${config.toolBase}_list_profiles`) return textResult(message.id, listProfiles(args));
+      if (name === `${config.toolBase}_activate_profile`) return textResult(message.id, activateProfile(args));
+      if (name === `${config.toolBase}_refresh_tools`) return textResult(message.id, await refreshTools(args));
+      if (name === `${config.toolBase}_usage_guide`) return textResult(message.id, usageGuide(args));
+
+      if (!name.startsWith(config.forwardPrefix)) {
+        return invalidToolCall(message.id, `Unknown tool "${name}". ${config.upstreamLabel} tools use the ${config.forwardPrefix} prefix.`);
+      }
+
+      const active = loadActiveConfig({ allowMissing: false });
+      await ensureUpstreamInitialized(active.profile);
+      const forwarded = await forwardToUpstreamMcp(active.profile, {
+        jsonrpc: "2.0",
+        id: message.id,
+        method: "tools/call",
+        params: {
+          ...message.params,
+          name: name.slice(config.forwardPrefix.length),
+        },
+      });
+      if (forwarded?.error) return toolErrorResult(message.id, safeErrorMessage(forwarded.error.message));
+      if (!forwarded?.result) return toolErrorResult(message.id, `${config.upstreamLabel} returned no tool result.`);
+      return forwarded;
+    } catch (error) {
+      return toolErrorResult(message.id, safeErrorMessage(error));
+    }
+  }
+
+  function consumeToolCall() {
+    const cutoff = Date.now() - 60_000;
+    state.toolCallTimes = state.toolCallTimes.filter((timestamp) => timestamp > cutoff);
+    if (state.toolCallTimes.length >= toolCallsPerMinute) return false;
+    state.toolCallTimes.push(Date.now());
+    return true;
   }
 
   async function configureProfile(args) {
@@ -536,7 +559,7 @@ export function createConnectorServer(options) {
               body: {
                 jsonrpc: "2.0",
                 id: payload.id ?? null,
-                error: { code: -32603, message: `${config.upstreamLabel} HTTP ${res.statusCode}: ${text.slice(0, 500)}` },
+                error: { code: -32603, message: `${config.upstreamLabel} endpoint returned HTTP ${res.statusCode}.` },
               },
             });
             return;
@@ -635,6 +658,12 @@ export function createConnectorServer(options) {
   function rawRequest(url, { method, headers, onResponse, onError }) {
     const isHttps = url.protocol === "https:";
     const transport = isHttps ? httpsRequest : httpRequest;
+    let settled = false;
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      (onError || (() => {}))(error);
+    };
     const req = transport(
       {
         protocol: url.protocol,
@@ -647,14 +676,26 @@ export function createConnectorServer(options) {
       },
       (res) => {
         let text = "";
+        let bytes = 0;
         res.setEncoding("utf8");
         res.on("data", (chunk) => {
+          bytes += Buffer.byteLength(chunk);
+          if (bytes > responseBodyLimitBytes) {
+            const error = new Error(`Response body exceeded ${responseBodyLimitBytes} bytes.`);
+            fail(error);
+            req.destroy(error);
+            return;
+          }
           text += chunk;
         });
-        res.on("end", () => onResponse(res, text));
+        res.on("end", () => {
+          if (settled) return;
+          settled = true;
+          onResponse(res, text);
+        });
       }
     );
-    req.on("error", onError || (() => {}));
+    req.on("error", fail);
     req.setTimeout(requestTimeoutMs, () => req.destroy(new Error(`Request timeout after ${requestTimeoutMs}ms`)));
     return req;
   }
@@ -726,6 +767,12 @@ function createBuiltinTools(config) {
       name: `${config.toolBase}_configure`,
       title: `Configure ${config.displayName}`,
       description: `Store this project's ${config.displayName} connection in factory information. Requires a WordPress site URL, username, and Application Password.`,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -780,6 +827,12 @@ function createBuiltinTools(config) {
       name: `${config.toolBase}_status`,
       title: `${config.displayName} Status`,
       description: `Show the active ${config.displayName} profile, redacted config, and optional live credential check.`,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -794,6 +847,12 @@ function createBuiltinTools(config) {
       name: `${config.toolBase}_forget`,
       title: `Forget ${config.displayName} Profile`,
       description: `Remove a stored ${config.displayName} profile from local factory information.`,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -806,6 +865,12 @@ function createBuiltinTools(config) {
       name: `${config.toolBase}_list_profiles`,
       title: `List ${config.displayName} Profiles`,
       description: `List stored ${config.displayName} connection profiles with secrets redacted.`,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -817,6 +882,12 @@ function createBuiltinTools(config) {
       name: `${config.toolBase}_activate_profile`,
       title: `Activate ${config.displayName} Profile`,
       description: `Switch this connector process to a stored ${config.displayName} profile for forwarded tool calls.`,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -829,6 +900,12 @@ function createBuiltinTools(config) {
       name: `${config.toolBase}_refresh_tools`,
       title: `Refresh ${config.displayName} Tool Cache`,
       description: `Run a live ${config.upstreamLabel} tools/list check and cache the forwarded tool schemas in local factory information when using stored profiles.`,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -841,6 +918,12 @@ function createBuiltinTools(config) {
       name: `${config.toolBase}_usage_guide`,
       title: `${config.displayName} Usage Guide`,
       description: `Read this before using forwarded ${config.upstreamLabel} tools. Explains setup, prefixes, discovery, and safe tool-selection patterns for this connector.`,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       inputSchema: {
         type: "object",
         properties: {
@@ -876,6 +959,8 @@ function normalizeOptions(options) {
       mcpPath: env.mcpPath,
       restApiRoot: env.restApiRoot,
       timeoutMs: env.timeoutMs,
+      toolCallsPerMinute: env.toolCallsPerMinute,
+      responseBodyLimitBytes: env.responseBodyLimitBytes,
     },
   };
 }
@@ -1105,6 +1190,19 @@ function textResult(id, text) {
   return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text }], isError: false } };
 }
 
+function toolErrorResult(id, text) {
+  return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text }], isError: true } };
+}
+
+function invalidToolCall(id, message) {
+  return { jsonrpc: "2.0", id, error: { code: -32602, message } };
+}
+
+function safeErrorMessage(error) {
+  const message = String(error?.message || error || "Tool execution failed.").replace(/[\r\n]+/g, " ").trim();
+  return message.slice(0, 500) || "Tool execution failed.";
+}
+
 function writeJson(payload) {
   process.stdout.write(`${JSON.stringify(payload)}\n`);
 }
@@ -1173,6 +1271,16 @@ function parseTimeoutMs(value, fallback) {
   if (!value) return fallback;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parsePositiveInteger(value, fallback) {
+  if (!value) return fallback;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function isRecord(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function assert(condition, message) {

@@ -113,6 +113,14 @@ try {
   const names = listed.result?.tools?.map((tool) => tool.name) || [];
   assert(names.includes("wordpress_factory_configure"), "builtin configure tool missing");
   assert(names.includes("wp__example_tool"), "cached forwarded tool missing");
+  const builtinTools = listed.result?.tools?.filter((tool) => tool.name.startsWith("wordpress_factory_")) || [];
+  assert(builtinTools.length === 7, "expected all seven builtin WordPress connector tools");
+  for (const tool of builtinTools) {
+    assert(tool.annotations && typeof tool.annotations.readOnlyHint === "boolean", `missing annotations on ${tool.name}`);
+    assert(typeof tool.annotations.destructiveHint === "boolean", `missing destructiveHint on ${tool.name}`);
+    assert(typeof tool.annotations.idempotentHint === "boolean", `missing idempotentHint on ${tool.name}`);
+    assert(typeof tool.annotations.openWorldHint === "boolean", `missing openWorldHint on ${tool.name}`);
+  }
 
   send({
     jsonrpc: "2.0",
@@ -128,6 +136,20 @@ try {
   const clientNames = clientListed.result?.tools?.map((tool) => tool.name) || [];
   assert(clientNames.includes("wp__client_tool"), "activated profile cached tool missing");
   assert(!clientNames.includes("wp__example_tool"), "previous profile cached tool leaked after activation");
+
+  send({
+    jsonrpc: "2.0",
+    id: 5,
+    method: "tools/call",
+    params: { name: "wordpress_factory_configure", arguments: { site_url: "not-a-url", username: "admin" } },
+  });
+  const executionError = await waitForId(5);
+  assert(executionError.result?.isError === true, "tool execution errors must set isError=true");
+  assert(!executionError.error, "tool execution errors must not become JSON-RPC errors");
+
+  send({ jsonrpc: "2.0", id: 6, method: "tools/call", params: { name: "wordpress_factory_status", arguments: [] } });
+  const invalidArguments = await waitForId(6);
+  assert(invalidArguments.error?.code === -32602, "malformed tools/call arguments must be a protocol error");
 
   child.kill();
   console.log("mcp smoke ok");

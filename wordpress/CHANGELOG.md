@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.2 — 2026-09-05
+
+### Fixed
+
+- Added explicit MCP risk annotations to every built-in WordPress and Elementor connector tool.
+- Reported connector and upstream execution failures as MCP tool results with `isError: true`, while retaining protocol errors for unknown tools and malformed `tools/call` requests.
+- Added object-shape validation for `tools/call` arguments, sanitized upstream HTTP failures, and a configurable per-process tool-call limit (default: 120 per minute).
+
 ## 1.2.1 — 2026-08-07
 
 - Both connectors' plugin.json `mcpServers` return to `command: "node"` with direct `server/*.mjs` entries. The `/bin/sh` + `bin/omatic-wp-launch.sh` form is refused by the claude.ai marketplace ingest (same class as omatic-server-connection 3.5.1), which silently pinned Claude Desktop at 1.1.1. The shell launcher remains in `bin/` for `.mcpb`-style packaging.

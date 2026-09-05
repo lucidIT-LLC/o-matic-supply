@@ -6,7 +6,7 @@ createConnectorServer({
   serverName: "o-matic-elementor-connector",
   displayName: "Elementor Factory Connector",
   upstreamLabel: "Elementor MCP",
-  version: "1.2.4",
+  version: "1.3.2",
   toolBase: "elementor_factory",
   forwardPrefix: "elementor__",
   factoryFileName: "elementor-factory.json",
@@ -99,5 +99,7 @@ createConnectorServer({
     mcpPath: "OMATIC_ELEMENTOR_MCP_PATH",
     restApiRoot: "OMATIC_ELEMENTOR_REST_API_ROOT",
     timeoutMs: "OMATIC_ELEMENTOR_TIMEOUT_MS",
+    toolCallsPerMinute: "OMATIC_ELEMENTOR_TOOL_CALLS_PER_MINUTE",
+    responseBodyLimitBytes: "OMATIC_ELEMENTOR_RESPONSE_BODY_LIMIT_BYTES",
   },
 });

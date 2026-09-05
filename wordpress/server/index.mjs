@@ -6,7 +6,7 @@ createConnectorServer({
   serverName: "o-matic-wordpress-connector",
   displayName: "WordPress Factory Connector",
   upstreamLabel: "WordPress MCP",
-  version: "1.2.4",
+  version: "1.3.2",
   toolBase: "wordpress_factory",
   forwardPrefix: "wp__",
   factoryFileName: "wordpress-factory.json",
@@ -71,5 +71,7 @@ createConnectorServer({
     mcpPath: "OMATIC_WP_MCP_PATH",
     restApiRoot: "OMATIC_WP_REST_API_ROOT",
     timeoutMs: "OMATIC_WP_TIMEOUT_MS",
+    toolCallsPerMinute: "OMATIC_WP_TOOL_CALLS_PER_MINUTE",
+    responseBodyLimitBytes: "OMATIC_WP_RESPONSE_BODY_LIMIT_BYTES",
   },
 });
