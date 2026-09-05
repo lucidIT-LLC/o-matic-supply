@@ -1,8 +1,8 @@
 {
   "name": "o-matic-wordpress-connector",
-  "display_name": "O-Matic WordPress Connector",
+  "display_name": "o-MATIC WordPress Connector",
   "version": "0.1.0",
-  "description": "Configurable WordPress MCP connector for O-Matic website work.",
+  "description": "Configurable WordPress MCP connector for o-MATIC website work.",
   "entrypoint": {
     "type": "stdio",
     "command": "node",

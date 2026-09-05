@@ -12,7 +12,7 @@
 
 - Both connectors' plugin.json `mcpServers` return to `command: "node"` with direct `server/*.mjs` entries. The `/bin/sh` + `bin/omatic-wp-launch.sh` form is refused by the claude.ai marketplace ingest (same class as omatic-server-connection 3.5.1), which silently pinned Claude Desktop at 1.1.1. The shell launcher remains in `bin/` for `.mcpb`-style packaging.
 
-All notable changes to the O-Matic WordPress Factory plugin are documented here.
+All notable changes to the o-MATIC WordPress Factory plugin are documented here.
 
 ## 1.2.0 - 2026-08-04
 

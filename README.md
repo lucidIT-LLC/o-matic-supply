@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Built by <a href="https://o-matic.ai">O-MATIC</a>, the AI research division of <a href="https://lucidit.io">LucidIT, LLC</a>.
+  Built by <a href="https://o-matic.ai">o-MATIC</a>, the AI research division of <a href="https://lucidit.io">lucidIT, LLC</a>.
 </p>
 
 # o-MATIC Supply

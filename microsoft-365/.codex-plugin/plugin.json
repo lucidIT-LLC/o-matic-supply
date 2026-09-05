@@ -25,7 +25,7 @@
     "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)",
     "shortDescription": "Give Codex governed access to Planner, Teams, SharePoint and OneNote over Microsoft Graph.",
     "longDescription": "An MCP server for everyday Microsoft 365 work: Planner (task and goal management, OKR-style — start from a goal, build the tasks that serve it), Teams (read), SharePoint Lists (read/write by internal column name), and OneNote (rich HTML pages with color, styling, inline images and attachments, not flat text). Self-hosted per tenant with delegated device-code sign-in — every call acts as the signed-in user, nothing is proxied through a shared service. Deliberately excludes Premium Planner / Dataverse (\"Project\"), which is a separate plugin.",
-    "developerName": "O-Matic AI Research Lab",
+    "developerName": "o-MATIC AI Research Lab",
     "category": "Productivity",
     "capabilities": [
       "Interactive",

@@ -1,6 +1,6 @@
-# O-Matic WordPress Factory
+# o-MATIC WordPress Factory
 
-Private work-in-progress repository for the O-Matic WordPress Factory plugin.
+Private work-in-progress repository for the o-MATIC WordPress Factory plugin.
 
 ## Intent
 
@@ -24,11 +24,11 @@ skills/jo/SKILL.md
 skills/wp-factory-monet/SKILL.md
 ```
 
-Brandy is the brand creator and guardian. She owns brand voice, messaging, naming, claim discipline, visual brand implications, brand styling passes, theme selection and generation, brand onboarding, and brand gates. For O-Matic work she carries the Factory 2.0 updates: brand locks, authority tiers, no-overclaim doctrine, AO language, compatibility-tier caution, and DB/Brand Book source order. She can apply active-brand colors, typography, contrast, accent use, and fallback fonts to artifacts without importing another company's brand tokens. She can also offer theme families or create a custom theme for unbranded or exploratory artifacts, but themes do not override an active brand source. She stays warm and sharp, not generic-marketing polite.
+Brandy is the brand creator and guardian. She owns brand voice, messaging, naming, claim discipline, visual brand implications, brand styling passes, theme selection and generation, brand onboarding, and brand gates. For o-MATIC work she carries the Factory 2.0 updates: brand locks, authority tiers, no-overclaim doctrine, Ao language, compatibility-tier caution, and DB/Brand Book source order. She can apply active-brand colors, typography, contrast, accent use, and fallback fonts to artifacts without importing another company's brand tokens. She can also offer theme families or create a custom theme for unbranded or exploratory artifacts, but themes do not override an active brand source. She stays warm and sharp, not generic-marketing polite.
 
 Carver is polyglot and code-first. WordPress and Elementor are the current delivery surface for this plugin, not the boundary of the role. He owns implementation, debugging, Python, Java, JavaScript, TypeScript, HTML, CSS, shell, SQL, PHP, React/TypeScript artifact builds, unfamiliar-stack ramp-up, scripts, services, integrations, plugins, themes, connector wiring, and verification. The skill keeps his builder personality while adding the archetypes needed for high-detail work: Master Craftsperson, Polyglot Engineer, Build Foreman, Adapter Engineer, Inspector, Systems Joiner, and Responsible Builder.
 
-Jo is the exact Writing Coach skill from the O-Matic Consulting Pack. She coaches writing without ghostwriting: deep reads, quick reads, collection/manuscript patterns, craft coaching, business/professional review, and voice development. The pen stays in the writer's hand.
+Jo is the exact Writing Coach skill from the o-MATIC Consulting Pack. She coaches writing without ghostwriting: deep reads, quick reads, collection/manuscript patterns, craft coaching, business/professional review, and voice development. The pen stays in the writer's hand.
 
 Monet is the visual systems skill. He owns diagrams, charts, dashboards, IA maps, web artifact UI direction, layout direction, source-backed visual explanations, and static design artifacts. Art Object Mode adds the useful canvas-design baseline: create a visual philosophy first, embed a subtle conceptual thread, keep text sparse and visual-first, communicate through composition, and take a second refinement pass for margins, containment, spacing, hierarchy, and polish. Web Artifact Design Mode adds React/Tailwind/shadcn visual direction, component hierarchy, responsive QA, and anti-slop guidance while Carver owns implementation and bundling. These modes do not replace Monet's factual discipline for diagrams and dashboards.
 

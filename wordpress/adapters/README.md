@@ -1,4 +1,4 @@
-# O-Matic WordPress Factory Adapters
+# o-MATIC WordPress Factory Adapters
 
 `agent-pack.json` is the host-neutral manifest.
 
