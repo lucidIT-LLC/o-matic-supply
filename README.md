@@ -17,6 +17,7 @@ lives.
 | Plugin | What you get |
 |---|---|
 | `wordpress@o-matic-supply` | The **WordPress** and **Elementor** MCP connectors — site and content operations, Elementor page building, template and theme work, media handling, and a sandboxed export/import path. |
+| `slate@o-matic-supply` | The narrow **Slate API** connector — versioned canvases, conflict-safe saves, restores, and bounded assets through a deployed O-Matic Server. |
 
 ## This pack ships MCP servers — and that is the point
 
@@ -54,6 +55,12 @@ Configure the connection with `wordpress_factory_configure` before use, and read
 `wordpress_factory_usage_guide` for the current capability summary. Forwarded
 upstream tools are namespaced `wp__` and `elementor__`; never call unprefixed
 upstream names through the connector.
+
+Slate is installed only after the matching O-Matic Server release is deployed.
+It accepts its server URL, host-held bearer token, and exact granted connection
+from the host environment; it does not put server credentials in a browser or
+project file. Call `slate_api_status` after installation to verify that the
+remote server publishes the complete Slate surface.
 
 ## Security
 

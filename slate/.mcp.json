@@ -1,0 +1,13 @@
+{
+  "o-matic-slate-api": {
+    "command": "node",
+    "args": ["${PLUGIN_ROOT}/server/index.mjs"],
+    "env": {
+      "OMATIC_SERVER_URL": "${OMATIC_SERVER_URL}",
+      "OMATIC_SERVER_TOKEN": "${OMATIC_SERVER_TOKEN}",
+      "OMATIC_SLATE_CONNECTION": "${OMATIC_SLATE_CONNECTION}",
+      "MCP_PROTOCOL_VERSION": "${MCP_PROTOCOL_VERSION}"
+    },
+    "cwd": "${PLUGIN_ROOT}"
+  }
+}
