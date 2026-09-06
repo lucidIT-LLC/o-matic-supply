@@ -1,0 +1,29 @@
+{
+  "name": "slate",
+  "version": "0.1.0",
+  "description": "Connect Codex to the governed Slate canvas API on the installed O-Matic Server.",
+  "author": {"name": "James Walker", "url": "https://o-matic.ai"},
+  "homepage": "https://o-matic.ai",
+  "repository": "https://github.com/lucidIT-LLC/o-matic-supply",
+  "license": "MIT",
+  "keywords": ["omatic", "slate", "canvas", "codex"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "o-MATIC Supply — Slate API",
+    "shortDescription": "Use the installed O-Matic Server's governed Slate canvas API.",
+    "longDescription": "A narrow proxy for Slate canvas, version, restore, and bounded asset operations. The server remains the authority for bearer-token authentication, factory grants, tenant isolation, and audit records. This package adds no database credential and no browser secret.",
+    "developerName": "o-MATIC AI Research Lab",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://o-matic.ai",
+    "privacyPolicyURL": "https://o-matic.ai",
+    "termsOfServiceURL": "https://o-matic.ai",
+    "defaultPrompt": [
+      "Check whether the Slate API is ready.",
+      "Create a Slate canvas for this work.",
+      "Open the current Slate canvas.",
+      "Save the current Slate canvas as a new revision."
+    ],
+    "brandColor": "#00B5AD"
+  }
+}
