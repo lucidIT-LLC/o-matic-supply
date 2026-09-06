@@ -17,14 +17,6 @@
         "path": "./microsoft-365"
       },
       "category": "Productivity"
-    },
-    {
-      "name": "slate",
-      "source": {
-        "source": "local",
-        "path": "./slate"
-      },
-      "category": "Productivity"
     }
   ]
 }

@@ -68,27 +68,6 @@
         "requiresForFullOperation": "a host able to launch stdio MCP servers, plus an Entra app registration (tenant ID + client ID) the operator controls",
         "note": "Delegated device-code sign-in only \u2014 every call acts as the signed-in user, credentials never leave the host. No OneNote application-permission tier exists in Graph at all, so OneNote is delegated-only by Microsoft's own design, not a limitation of this plugin."
       }
-    },
-    {
-      "name": "slate",
-      "displayName": "o-MATIC Supply \u2014 Slate API",
-      "source": "./slate",
-      "version": "0.1.0",
-      "description": "A narrow MCP adapter to the installed O-Matic Server Slate API: versioned canvases, safe restores, and bounded assets. The server remains the authority for grants, tenant isolation, and audit.",
-      "author": {
-        "name": "LucidIT, LLC",
-        "url": "https://o-matic.ai"
-      },
-      "homepage": "https://o-matic.ai",
-      "license": "BUSL-1.1",
-      "category": "Productivity",
-      "keywords": ["slate", "canvas", "mcp", "o-matic"],
-      "metadata": {
-        "compatibilityTier": "MCP-host-full-operation ONLY",
-        "shipsMcpServer": true,
-        "requiresForFullOperation": "Node 20+, a deployed Slate-capable O-Matic Server, and host-held server authentication",
-        "securityBoundary": "No token, database credential, or customer canvas is persisted by the connector; the browser never receives the server bearer token."
-      }
     }
   ]
 }
