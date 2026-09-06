@@ -2,27 +2,27 @@
   "name": "team-assistant-mcp",
   "version": "0.1.0",
   "private": true,
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "description": "Team Assistant \u2014 an MCP server giving an AI assistant governed read/write access to a team's work in Microsoft Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph.",
   "type": "module",
   "engines": {
     "node": ">=20.10.0"
   },
   "bin": {
-    "team-assistant-mcp": "dist/src/index.js"
+    "team-assistant-mcp": "dist/index.mjs"
   },
-  "main": "dist/src/index.js",
+  "main": "dist/index.mjs",
   "files": [
     "dist",
-    "README.md",
-    "LICENSE"
+    "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "compile": "tsc",
+    "build": "esbuild src/index.ts --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist",
-    "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
-    "start": "node dist/src/index.js"
+    "clean": "rm -rf dist .tsc-out",
+    "test": "npm run compile && node --test \".tsc-out/test/**/*.test.js\"",
+    "start": "node dist/index.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.9",
+    "esbuild": "0.28.2",
     "typescript": "^5.9.2"
   }
 }

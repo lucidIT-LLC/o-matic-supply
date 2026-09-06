@@ -1,7 +1,7 @@
 {
   "o-matic-slate-api": {
     "command": "node",
-    "args": ["${PLUGIN_ROOT}/server/index.mjs"],
+    "args": ["${PLUGIN_ROOT}/dist/index.mjs"],
     "env": {
       "OMATIC_SERVER_URL": "${OMATIC_SERVER_URL}",
       "OMATIC_SERVER_TOKEN": "${OMATIC_SERVER_TOKEN}",

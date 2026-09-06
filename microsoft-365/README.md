@@ -147,7 +147,7 @@ otherwise.
   "mcpServers": {
     "team-assistant": {
       "command": "node",
-      "args": ["/absolute/path/to/team-assistant-mcp/dist/src/index.js"],
+      "args": ["/absolute/path/to/team-assistant-mcp/dist/index.mjs"],
       "env": {
         "TEAM_ASSISTANT_TENANT_ID": "<directory (tenant) id>",
         "TEAM_ASSISTANT_CLIENT_ID": "<application (client) id>"
@@ -437,4 +437,4 @@ session.
 
 ## License
 
-MIT. See `LICENSE`.
+Business Source License 1.1 (BUSL). See the repository root `LICENSE.md`. Converts to Apache License, Version 2.0 on 2030-09-05.

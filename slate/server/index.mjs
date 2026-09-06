@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * o-MATIC Supply — Slate API connector (MIT).
+ * o-MATIC Supply — Slate API connector (BUSL 1.1).
  *
  * A deliberately narrow stdio MCP proxy. The O-Matic Server is still the
  * authority: it validates the bearer token, factory grant, tenant, revision

@@ -1,15 +1,15 @@
 {
   "name": "slate",
   "version": "0.1.0",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "description": "Governed O-Matic Server Slate canvas API connector. It passes only the authenticated host's request to the server; it stores no copy of the bearer token.",
-  "author": {"name": "James Walker", "url": "https://o-matic.ai"},
+  "author": {"name": "LucidIT, LLC", "url": "https://o-matic.ai"},
   "homepage": "https://o-matic.ai",
   "keywords": ["omatic", "slate", "canvas", "mcp"],
   "mcpServers": {
     "o-matic-slate-api": {
       "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/server/index.mjs"],
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/index.mjs"],
       "env": {
         "OMATIC_SERVER_URL": "${OMATIC_SERVER_URL}",
         "OMATIC_SERVER_TOKEN": "${OMATIC_SERVER_TOKEN}",

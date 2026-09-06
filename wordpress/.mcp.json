@@ -3,7 +3,7 @@
     "command": "/bin/sh",
     "args": [
       "${PLUGIN_ROOT}/bin/omatic-wp-launch.sh",
-      "server/index.mjs",
+      "dist/index.mjs",
       "wordpress"
     ],
     "env": {
@@ -25,7 +25,7 @@
     "command": "/bin/sh",
     "args": [
       "${PLUGIN_ROOT}/bin/omatic-wp-launch.sh",
-      "server/elementor.mjs",
+      "dist/elementor.mjs",
       "elementor"
     ],
     "env": {

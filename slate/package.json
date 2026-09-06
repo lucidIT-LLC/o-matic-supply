@@ -5,9 +5,13 @@
   "description": "o-MATIC Supply connector for the governed Slate API published by O-Matic Server.",
   "type": "module",
   "engines": {"node": ">=20"},
-  "license": "MIT",
-  "bin": {"o-matic-slate-api": "server/index.mjs"},
+  "license": "BUSL-1.1",
+  "bin": {"o-matic-slate-api": "dist/index.mjs"},
   "scripts": {
-    "check": "node --check server/index.mjs && node server/index.mjs --self-test"
+    "check": "node --check server/index.mjs && node server/index.mjs --self-test",
+    "build": "esbuild server/index.mjs --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }

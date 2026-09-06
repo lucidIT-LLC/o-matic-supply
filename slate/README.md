@@ -40,4 +40,4 @@ explicit server-side save path is enabled.
 
 ## License
 
-MIT. See the repository root [LICENSE](../LICENSE).
+Business Source License 1.1 (BUSL). See the repository root [LICENSE.md](../LICENSE.md). Converts to Apache License, Version 2.0 on 2030-09-05.

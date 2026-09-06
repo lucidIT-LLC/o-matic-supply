@@ -5,18 +5,22 @@
   "description": "o-MATIC WordPress Factory plugin with bundled brand, build, writing, and visual skills plus separate WordPress and Elementor MCP connectors.",
   "type": "module",
   "bin": {
-    "o-matic-wordpress-connector": "./server/index.mjs",
-    "o-matic-elementor-connector": "./server/elementor.mjs"
+    "o-matic-wordpress-connector": "./dist/index.mjs",
+    "o-matic-elementor-connector": "./dist/elementor.mjs"
   },
   "scripts": {
     "check": "node --check server/index.mjs && node --check server/elementor.mjs && node --check server/lib/mcp-connector.mjs && node --check scripts/smoke-mcp.mjs && node --check scripts/sync-bundled-skills.mjs && node server/index.mjs --self-test && node server/elementor.mjs --self-test && node scripts/smoke-mcp.mjs",
+    "build": "esbuild server/index.mjs --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs && esbuild server/elementor.mjs --bundle --minify --platform=node --format=esm --outfile=dist/elementor.mjs",
     "skills:sync": "node scripts/sync-bundled-skills.mjs",
     "skills:check": "node scripts/sync-bundled-skills.mjs --check"
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "license": "BUSL-1.1",
   "release": {
     "channel": "stable",
     "tags": [

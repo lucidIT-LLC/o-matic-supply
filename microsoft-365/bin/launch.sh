@@ -20,7 +20,7 @@ MIN_MAJOR=20
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd) || exit 1
 PLUGIN_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd) || exit 1
-SERVER_ENTRY="$PLUGIN_ROOT/dist/src/index.js"
+SERVER_ENTRY="$PLUGIN_ROOT/dist/index.mjs"
 
 usable_node() {
     _candidate=$1

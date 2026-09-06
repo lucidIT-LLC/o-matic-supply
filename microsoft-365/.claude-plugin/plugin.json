@@ -1,10 +1,10 @@
 {
   "name": "microsoft-365",
   "version": "0.1.0",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "description": "Team Assistant MCP: an AI-native MCP server giving governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted, per-tenant, delegated sign-in — no central service, no admin-consent-for-others.",
   "author": {
-    "name": "James Walker",
+    "name": "LucidIT, LLC",
     "url": "https://o-matic.ai"
   },
   "homepage": "https://o-matic.ai",

@@ -17,11 +17,11 @@
       "version": "1.3.2",
       "description": "o-MATIC Supply \u2014 tools, not people. The WordPress and Elementor MCP connectors: site and content operations, Elementor page building, template and theme work, media, and a sandboxed export/import path. Ships MCP servers by design; it is equipment, not staff.",
       "author": {
-        "name": "James Walker",
+        "name": "LucidIT, LLC",
         "url": "https://o-matic.ai"
       },
       "homepage": "https://o-matic.ai",
-      "license": "MIT",
+      "license": "BUSL-1.1",
       "category": "Productivity",
       "keywords": [
         "wordpress",
@@ -45,11 +45,11 @@
       "version": "0.1.0",
       "description": "Team Assistant MCP: governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted per tenant with delegated device-code sign-in \u2014 no central service, no admin-consent-for-others. Premium Planner / Dataverse (\"Project\") is deliberately out of scope, a separate plugin.",
       "author": {
-        "name": "James Walker",
+        "name": "LucidIT, LLC",
         "url": "https://o-matic.ai"
       },
       "homepage": "https://o-matic.ai",
-      "license": "MIT",
+      "license": "BUSL-1.1",
       "category": "Productivity",
       "keywords": [
         "microsoft-365",
@@ -76,11 +76,11 @@
       "version": "0.1.0",
       "description": "A narrow MCP adapter to the installed O-Matic Server Slate API: versioned canvases, safe restores, and bounded assets. The server remains the authority for grants, tenant isolation, and audit.",
       "author": {
-        "name": "James Walker",
+        "name": "LucidIT, LLC",
         "url": "https://o-matic.ai"
       },
       "homepage": "https://o-matic.ai",
-      "license": "MIT",
+      "license": "BUSL-1.1",
       "category": "Productivity",
       "keywords": ["slate", "canvas", "mcp", "o-matic"],
       "metadata": {

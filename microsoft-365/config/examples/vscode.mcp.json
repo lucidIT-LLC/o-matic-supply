@@ -2,7 +2,7 @@
   "servers": {
     "team-assistant": {
       "command": "node",
-      "args": ["/absolute/path/to/microsoft-365/dist/src/index.js"],
+      "args": ["/absolute/path/to/microsoft-365/dist/index.mjs"],
       "env": {
         "TEAM_ASSISTANT_TENANT_ID": "",
         "TEAM_ASSISTANT_CLIENT_ID": "",

@@ -16,7 +16,7 @@
   },
   "homepage": "https://o-matic.ai",
   "repository": "https://github.com/lucidIT-LLC/o-matic-wordpress-factory",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "description": "Host-aware WordPress and Elementor MCP plugin with bundled brand, build, writing, and visual skills.",
   "canonical_format": {
     "type": "mcp_plugin_with_markdown_skills",

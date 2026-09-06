@@ -3,12 +3,12 @@
   "version": "1.3.2",
   "description": "o-MATIC WordPress Factory connectors: WordPress and Elementor MCP servers for site and content operations. Tools, not people - the agents ship separately in o-MATIC Studio.",
   "author": {
-    "name": "James Walker",
+    "name": "LucidIT, LLC",
     "url": "https://o-matic.ai"
   },
   "homepage": "https://o-matic.ai",
   "repository": "https://github.com/lucidIT-LLC/o-matic-wordpress-factory",
-  "license": "MIT",
+  "license": "BUSL-1.1",
   "keywords": [
     "omatic",
     "wordpress",
