@@ -11,6 +11,7 @@
   "scripts": {
     "check": "node --check server/index.mjs && node --check server/elementor.mjs && node --check server/lib/mcp-connector.mjs && node --check scripts/smoke-mcp.mjs && node --check scripts/sync-bundled-skills.mjs && node server/index.mjs --self-test && node server/elementor.mjs --self-test && node scripts/smoke-mcp.mjs",
     "build": "esbuild server/index.mjs --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs && esbuild server/elementor.mjs --bundle --minify --platform=node --format=esm --outfile=dist/elementor.mjs",
+    "postinstall": "npm run build",
     "skills:sync": "node scripts/sync-bundled-skills.mjs",
     "skills:check": "node scripts/sync-bundled-skills.mjs --check"
   },

@@ -19,6 +19,7 @@
   "scripts": {
     "compile": "tsc",
     "build": "esbuild src/index.ts --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs",
+    "postinstall": "npm run build",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .tsc-out",
     "test": "npm run compile && node --test \".tsc-out/test/**/*.test.js\"",

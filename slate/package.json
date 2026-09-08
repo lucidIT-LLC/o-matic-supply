@@ -9,7 +9,8 @@
   "bin": {"o-matic-slate-api": "dist/index.mjs"},
   "scripts": {
     "check": "node --check server/index.mjs && node server/index.mjs --self-test",
-    "build": "esbuild server/index.mjs --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs"
+    "build": "esbuild server/index.mjs --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs",
+    "postinstall": "npm run build"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
