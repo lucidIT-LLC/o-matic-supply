@@ -1,0 +1,22 @@
+name: verify-pack
+
+# Task #659: none of the four shipped marketplace repos had any CI. The pack
+# verifier existed but ran only when a human remembered, from a sibling path
+# that exists solely in the maintainer's local layout -- so it was a check that
+# could not fail anything on a clone. This is the moment at which it can.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify pack integrity
+        run: node scripts/verify-pack.mjs .

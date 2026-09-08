@@ -18,9 +18,9 @@
   ],
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "o-MATIC Supply \u2014 WordPress & Elementor",
+    "displayName": "o-MATIC Supply — WordPress & Elementor",
     "shortDescription": "Connect Codex to a project's WordPress and Elementor MCP tools.",
-    "longDescription": "A private WIP o-MATIC plugin for small website builders. This pass provides separate project-local setup tools for WordPress and Elementor MCP connections and bundles Brandy as brand creator and guardian, Carver as the polyglot builder, Jo as the writing coach, and Monet as the visual systems designer for diagrams, dashboards, IA maps, design direction, and static art-object visuals.",
+    "longDescription": "Project-local WordPress and Elementor MCP connectors for Codex. Tools, not people: this pack ships the two connector servers and their setup tools only. The agents who use them - Brandy, Carver, Jo, Monet and Pixel - ship separately in o-MATIC Studio, because a plugin declaring an mcpServers block is omitted by hosted-marketplace hosts and bundling them here once cost four agents on restricted hosts.",
     "developerName": "o-MATIC AI Research Lab",
     "category": "Productivity",
     "capabilities": [
@@ -34,16 +34,6 @@
     "defaultPrompt": [
       "Configure this project's WordPress MCP connection.",
       "Configure this project's Elementor MCP connection.",
-      "Brandy, review this page for brand fit.",
-      "Brandy, apply the active brand styling to this artifact.",
-      "Brandy, create theme options for this unbranded artifact.",
-      "Brandy, help me create a brand reference for this project.",
-      "Carver, inspect this plugin and build the next scoped change.",
-      "Carver, fix this Python or Java code path.",
-      "Jo, give this page copy a business writing review.",
-      "Jo, help me develop the voice in this draft.",
-      "Monet, map this site structure.",
-      "Monet, create a design direction for this static visual.",
       "Check the WordPress Factory connector status.",
       "Check the Elementor Factory connector status.",
       "Refresh cached WordPress and Elementor MCP tools.",

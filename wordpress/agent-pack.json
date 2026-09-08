@@ -1,7 +1,7 @@
 {
   "schema": "lucidit-agent-pack-v1",
   "name": "o-matic-wordpress-factory",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "display_name": "o-MATIC WordPress Factory",
   "release": {
     "channel": "stable",
@@ -17,7 +17,7 @@
   "homepage": "https://o-matic.ai",
   "repository": "https://github.com/lucidIT-LLC/o-matic-wordpress-factory",
   "license": "BUSL-1.1",
-  "description": "Host-aware WordPress and Elementor MCP plugin with bundled brand, build, writing, and visual skills.",
+  "description": "Host-aware WordPress and Elementor MCP plugin. Tools, not people - the agents ship separately in o-MATIC Studio.",
   "canonical_format": {
     "type": "mcp_plugin_with_markdown_skills",
     "mcp_servers": [
@@ -37,18 +37,19 @@
       "hosts": [
         "codex",
         "claude-code",
-        "cowork-with-mcp-config"
+        "cowork-with-mcp-config",
+        "google-gemini-cli",
+        "github-copilot-vscode"
       ],
-      "notes": "Full operation requires an MCP-capable host that can launch the WordPress and Elementor connector servers and provide project credentials or profile config."
+      "notes": "Full operation requires an MCP-capable host that can launch the WordPress and Elementor connector servers and provide project credentials or profile config. Host config shapes differ and are NOT interchangeable: Claude Code / Cowork / Gemini CLI use an mcpServers map; Codex uses mcp_servers (TOML) or a bare server map in the file .codex-plugin/plugin.json's mcpServers field points at; VS Code Copilot uses a servers map with an explicit per-server type. See config/examples/."
     },
     "prompt_only_hosts": {
       "status": "limited",
       "hosts": [
-        "google-gemini",
         "ollama",
         "generic-chat"
       ],
-      "notes": "Prompt-only hosts can load bundled skills as behavior instructions, but cannot perform WordPress or Elementor actions unless connected through an external MCP bridge or separate tool adapter."
+      "notes": "Prompt-only hosts can load bundled skills as behavior instructions, but cannot perform WordPress or Elementor actions unless connected through an external MCP bridge or separate tool adapter. google-gemini was listed here until 2026-09-06 and that was WRONG - Gemini CLI has native MCP support via ~/.gemini/settings.json mcpServers and is now a full mcp_host. Verified against google-gemini.github.io/gemini-cli/docs/tools/mcp-server."
     }
   },
   "adapters": {
@@ -68,8 +69,11 @@
       "notes": "Use the same server entry points with explicit WordPress or Elementor environment variables/profile config."
     },
     "google": {
-      "type": "system_instruction",
-      "notes": "Use a bundled SKILL.md body as the system instruction for planning/review behavior. No site tools are available without an MCP bridge."
+      "type": "mcp_settings_json",
+      "settings_path": "~/.gemini/settings.json (user) or <project>/.gemini/settings.json (project)",
+      "mcp_manifest_key": "mcpServers",
+      "example": "config/examples/gemini-cli.settings.json",
+      "notes": "Gemini CLI launches the WordPress and Elementor connectors natively. Per-server fields: command, args, env, cwd, timeout, trust (plus url/httpUrl for remote transports). env values accept $VAR_NAME indirection. Verified against vendor docs 2026-09-06."
     },
     "ollama": {
       "type": "modelfile_system_prompt",
@@ -78,6 +82,13 @@
     "generic": {
       "type": "system_prompt",
       "notes": "Load the selected SKILL.md as a system/developer instruction. Treat WordPress and Elementor actions as unavailable unless the runtime provides matching tools."
+    },
+    "copilot": {
+      "type": "vscode_mcp_json",
+      "settings_path": "<workspace>/.vscode/mcp.json, or the user profile file opened via 'MCP: Open User Configuration'",
+      "mcp_manifest_key": "servers",
+      "example": "config/examples/vscode.mcp.json",
+      "notes": "VS Code Copilot Chat launches the connectors natively. The top-level key is servers, NOT mcpServers, and each server declares an explicit type (stdio or http). Use the inputs block for secrets so the application password is prompted at server start rather than stored in the file. Decision #304 covered SKILL.md loading only; this closes the tool/MCP half. Verified against vendor docs 2026-09-06."
     }
   },
   "skills": [],

@@ -1,0 +1,47 @@
+{
+  "_comment": "Gemini CLI native MCP install. Merge this mcpServers block into ~/.gemini/settings.json (user scope) or <project>/.gemini/settings.json (project scope). Verified against google-gemini.github.io/gemini-cli/docs/tools/mcp-server 2026-09-06: top-level key is mcpServers; per-server fields are command/args/env/cwd/timeout/trust plus url/httpUrl for remote transports. Gemini CLI env values also accept $VAR_NAME indirection if you prefer not to inline secrets.",
+  "mcpServers": {
+    "o-matic-wordpress-connector": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/o-matic-wordpress-factory/server/index.mjs"
+      ],
+      "cwd": "/absolute/path/to/o-matic-wordpress-factory",
+      "timeout": 30000,
+      "trust": false,
+      "env": {
+        "OMATIC_PROJECT_ROOT": "/absolute/path/to/your/site-project",
+        "OMATIC_WORDPRESS_FACTORY_CONFIG": "",
+        "OMATIC_WORDPRESS_FACTORY_PROFILE": "default",
+        "OMATIC_WP_URL": "",
+        "OMATIC_WP_USERNAME": "",
+        "OMATIC_WP_APP_PASSWORD": "",
+        "OMATIC_WP_MCP_PATH": "",
+        "OMATIC_WP_REST_API_ROOT": "",
+        "OMATIC_WP_TIMEOUT_MS": "15000",
+        "MCP_PROTOCOL_VERSION": "2025-06-18"
+      }
+    },
+    "o-matic-elementor-connector": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/o-matic-wordpress-factory/server/elementor.mjs"
+      ],
+      "cwd": "/absolute/path/to/o-matic-wordpress-factory",
+      "timeout": 30000,
+      "trust": false,
+      "env": {
+        "OMATIC_PROJECT_ROOT": "/absolute/path/to/your/site-project",
+        "OMATIC_ELEMENTOR_FACTORY_CONFIG": "",
+        "OMATIC_ELEMENTOR_FACTORY_PROFILE": "default",
+        "OMATIC_ELEMENTOR_URL": "",
+        "OMATIC_ELEMENTOR_USERNAME": "",
+        "OMATIC_ELEMENTOR_APP_PASSWORD": "",
+        "OMATIC_ELEMENTOR_MCP_PATH": "",
+        "OMATIC_ELEMENTOR_REST_API_ROOT": "",
+        "OMATIC_ELEMENTOR_TIMEOUT_MS": "15000",
+        "MCP_PROTOCOL_VERSION": "2025-06-18"
+      }
+    }
+  }
+}

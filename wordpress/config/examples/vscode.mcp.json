@@ -1,0 +1,57 @@
+{
+  "_comment": "GitHub Copilot / VS Code native MCP install. Save as <workspace>/.vscode/mcp.json, or open the user-profile file via the 'MCP: Open User Configuration' command. Verified against code.visualstudio.com/docs/copilot/customization/mcp-servers 2026-09-06: top-level key is servers (NOT mcpServers), each entry carries an explicit type. The inputs block makes VS Code prompt for the application password at server start instead of storing it in the file.",
+  "inputs": [
+    {
+      "id": "omatic-wp-app-password",
+      "type": "promptString",
+      "description": "WordPress application password for the o-MATIC connector",
+      "password": true
+    },
+    {
+      "id": "omatic-elementor-app-password",
+      "type": "promptString",
+      "description": "Elementor application password for the o-MATIC connector",
+      "password": true
+    }
+  ],
+  "servers": {
+    "o-matic-wordpress-connector": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/absolute/path/to/o-matic-wordpress-factory/server/index.mjs"
+      ],
+      "env": {
+        "OMATIC_PROJECT_ROOT": "/absolute/path/to/your/site-project",
+        "OMATIC_WORDPRESS_FACTORY_CONFIG": "",
+        "OMATIC_WORDPRESS_FACTORY_PROFILE": "default",
+        "OMATIC_WP_URL": "",
+        "OMATIC_WP_USERNAME": "",
+        "OMATIC_WP_APP_PASSWORD": "${input:omatic-wp-app-password}",
+        "OMATIC_WP_MCP_PATH": "",
+        "OMATIC_WP_REST_API_ROOT": "",
+        "OMATIC_WP_TIMEOUT_MS": "15000",
+        "MCP_PROTOCOL_VERSION": "2025-06-18"
+      }
+    },
+    "o-matic-elementor-connector": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/absolute/path/to/o-matic-wordpress-factory/server/elementor.mjs"
+      ],
+      "env": {
+        "OMATIC_PROJECT_ROOT": "/absolute/path/to/your/site-project",
+        "OMATIC_ELEMENTOR_FACTORY_CONFIG": "",
+        "OMATIC_ELEMENTOR_FACTORY_PROFILE": "default",
+        "OMATIC_ELEMENTOR_URL": "",
+        "OMATIC_ELEMENTOR_USERNAME": "",
+        "OMATIC_ELEMENTOR_APP_PASSWORD": "${input:omatic-elementor-app-password}",
+        "OMATIC_ELEMENTOR_MCP_PATH": "",
+        "OMATIC_ELEMENTOR_REST_API_ROOT": "",
+        "OMATIC_ELEMENTOR_TIMEOUT_MS": "15000",
+        "MCP_PROTOCOL_VERSION": "2025-06-18"
+      }
+    }
+  }
+}

@@ -37,7 +37,7 @@ separately in **o-MATIC Studio**, which installs anywhere.
 ## The other doors
 
 - **o-MATIC Agency** — staff who *run* the factory: Probot, Fred, Data
-- **o-MATIC Firm** — expertise you *retain*: Smith, Tim, Rimmer, Jake
+- **o-MATIC Firm** — expertise you *retain*: Smith, Jake
 - **o-MATIC Studio** — people who *design and build*: Brandy, Carver, Monet, Jo, Pixel
 - **o-MATIC Supply** — *tools*: WordPress and Elementor connectors
 
