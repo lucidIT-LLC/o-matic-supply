@@ -56,11 +56,9 @@ Configure the connection with `wordpress_factory_configure` before use, and read
 upstream tools are namespaced `wp__` and `elementor__`; never call unprefixed
 upstream names through the connector.
 
-Slate is installed only after the matching O-Matic Server release is deployed.
-It accepts its server URL, host-held bearer token, and exact granted connection
-from the host environment; it does not put server credentials in a browser or
-project file. Call `slate_api_status` after installation to verify that the
-remote server publishes the complete Slate surface.
+Slate is not an o-MATIC Supply product. Per decision #414, it is a free factory
+surface built into the o-MATIC Server, not sold or installed from this
+marketplace — see the o-MATIC Server distribution for it.
 
 ## Security
 
