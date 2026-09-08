@@ -17,7 +17,7 @@ lives.
 | Plugin | What you get |
 |---|---|
 | `wordpress@o-matic-supply` | The **WordPress** and **Elementor** MCP connectors — site and content operations, Elementor page building, template and theme work, media handling, and a sandboxed export/import path. |
-| `slate@o-matic-supply` | The narrow **Slate API** connector — versioned canvases, conflict-safe saves, restores, and bounded assets through a deployed O-Matic Server. |
+| `microsoft-365@o-matic-supply` | The **Team Assistant** MCP connector — governed read/write access to Microsoft Planner (including Goals), Teams channels, SharePoint Lists, and OneNote over Microsoft Graph, with per-user OAuth device-code sign-in and OS-keychain token storage. |
 
 ## This pack ships MCP servers — and that is the point
 
