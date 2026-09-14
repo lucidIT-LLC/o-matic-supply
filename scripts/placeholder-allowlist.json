@@ -1,0 +1,44 @@
+{
+  "_comment": [
+    "Every ${...} placeholder in a shipped MCP manifest that is NOT one of the three",
+    "documented built-ins (CLAUDE_PLUGIN_ROOT, CLAUDE_PLUGIN_DATA, CLAUDE_PROJECT_DIR)",
+    "must be listed here with a reason, or verify-pack.mjs FAILS.",
+    "",
+    "Why this is an allowlist and not a denylist: the vendor doc",
+    "(code.claude.com/docs/en/plugins-reference.md, read 2026-09-13) says a plugin",
+    "manifest may also carry '${ENV_VAR} from the environment' -- so these spellings",
+    "are not illegal. They are DANGEROUS, which is different: when the named variable",
+    "is UNSET, the host substitutes nothing and the child process receives the literal",
+    "eight-or-more character string '${FOO}' as the value. microsoft-365 shipped five",
+    "of these and the server crashed on startup -- measured and reproduced 2026-09-13.",
+    "A denylist of known-bad spellings would have caught ${PLUGIN_ROOT} and missed",
+    "every one of those. So: unknown placeholder = FAIL until someone writes down why."
+  ],
+  "allowed": [
+    {
+      "packs": ["wordpress"],
+      "vars": [
+        "OMATIC_WORDPRESS_FACTORY_CONFIG", "OMATIC_WORDPRESS_FACTORY_PROFILE",
+        "OMATIC_WP_URL", "OMATIC_WP_USERNAME", "OMATIC_WP_APP_PASSWORD",
+        "OMATIC_WP_MCP_PATH", "OMATIC_WP_REST_API_ROOT", "OMATIC_WP_TIMEOUT_MS",
+        "OMATIC_WP_TOOL_CALLS_PER_MINUTE", "OMATIC_WP_RESPONSE_BODY_LIMIT_BYTES",
+        "OMATIC_ELEMENTOR_FACTORY_CONFIG", "OMATIC_ELEMENTOR_FACTORY_PROFILE",
+        "OMATIC_ELEMENTOR_URL", "OMATIC_ELEMENTOR_USERNAME", "OMATIC_ELEMENTOR_APP_PASSWORD",
+        "OMATIC_ELEMENTOR_MCP_PATH", "OMATIC_ELEMENTOR_REST_API_ROOT",
+        "OMATIC_ELEMENTOR_TIMEOUT_MS", "OMATIC_ELEMENTOR_TOOL_CALLS_PER_MINUTE",
+        "OMATIC_ELEMENTOR_RESPONSE_BODY_LIMIT_BYTES", "MCP_PROTOCOL_VERSION"
+      ],
+      "reason": "MEASURED tolerant: the WordPress/Elementor connector validates each of these and falls back to its stored profile config when the value is absent or malformed, so a literal '${OMATIC_WP_URL}' is discarded rather than executed. Left in place deliberately rather than deleted, because a SET variable is the documented way an operator overrides the profile without editing the manifest.",
+      "risk": "low -- garbage-tolerant consumer, verified by reading the connector's config loader",
+      "recorded": "2026-09-13"
+    },
+    {
+      "packs": ["slate"],
+      "vars": ["OMATIC_SERVER_URL", "OMATIC_SERVER_TOKEN", "OMATIC_SLATE_CONNECTION", "MCP_PROTOCOL_VERSION"],
+      "reason": "UNMEASURED. Slate is not installed on any host in this estate, so its tolerance of a literal '${OMATIC_SERVER_TOKEN}' has never been observed -- this is the SAME latent shape that crashed microsoft-365. Allowed only so this control can ship green today against a pack nobody can currently run; it is debt, not a clearance.",
+      "risk": "UNKNOWN -- treat as red",
+      "owed": "Install slate, start it with all four variables unset, and either observe it reject the literal values cleanly or remove this entry and the placeholders with it. File as a task.",
+      "recorded": "2026-09-13"
+    }
+  ]
+}

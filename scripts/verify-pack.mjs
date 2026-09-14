@@ -78,6 +78,92 @@ for (const d of readdirSync(root)) {
   else FAIL("no compatibilityTier declared — rule #284 (compatibility gate) is halt-grade");
 }
 
+// 2c. ${...} placeholders in shipped MCP manifests — task #659 follow-up.
+// Vendor doc: code.claude.com/docs/en/plugins-reference.md, read 2026-09-13.
+//
+// Three built-ins substitute anywhere they are allowed at all:
+//   ${CLAUDE_PLUGIN_ROOT} ${CLAUDE_PLUGIN_DATA} ${CLAUDE_PROJECT_DIR}
+// The doc also permits "any ${ENV_VAR} from the environment" — which is why
+// this is an ALLOWLIST with a written reason per exception rather than a
+// denylist of bad spellings. A denylist would have caught the ${PLUGIN_ROOT}
+// typo (9 occurrences) and missed all five of microsoft-365's env-block
+// placeholders, which is the pair that actually broke the server.
+//
+// Substitution is ALSO field-scoped. The doc's table:
+//   stdio servers          -> command, args, env
+//   http/sse/ws servers    -> url, headers, headersHelper
+//   LSP servers            -> command, args, env, workspaceFolder
+// `cwd` appears in NO row. A ${...} there resolves nowhere and the host is
+// handed a directory literally named "${CLAUDE_PLUGIN_ROOT}".
+//
+// Both manifest locations are scanned. The host loads the server from
+// .claude-plugin/plugin.json; checking only .mcp.json is how the previous pass
+// reached the wrong cause for the microsoft-365 crash.
+{
+  const BUILTINS = new Set(["CLAUDE_PLUGIN_ROOT", "CLAUDE_PLUGIN_DATA", "CLAUDE_PROJECT_DIR"]);
+  const SUBST_FIELDS = {
+    stdio: new Set(["command", "args", "env"]),
+    http: new Set(["url", "headers", "headersHelper"]),
+    sse: new Set(["url", "headers", "headersHelper"]),
+    ws: new Set(["url", "headers", "headersHelper"]),
+  };
+  const alPath = join(root, "scripts", "placeholder-allowlist.json");
+  let allow = [];
+  if (existsSync(alPath)) {
+    try { allow = JSON.parse(readFileSync(alPath, "utf8")).allowed ?? []; }
+    catch (e) { FAIL(`scripts/placeholder-allowlist.json invalid: ${e.message}`); }
+  }
+  const allowed = (pack, v) => allow.some(a =>
+    (a.packs ?? []).includes(pack) && (a.vars ?? []).includes(v) && a.reason);
+
+  const TOKEN = /\$\{([^}]*)\}/g;
+  // Walk a server object, remembering which top-level field we are inside.
+  const scanValue = (val, field, ctx, transport) => {
+    if (typeof val === "string") {
+      for (const m of val.matchAll(TOKEN)) {
+        const v = m[1];
+        const substitutes = (SUBST_FIELDS[transport] ?? SUBST_FIELDS.stdio).has(field);
+        if (!substitutes) {
+          FAIL(`${ctx}: \${${v}} sits in "${field}", which the vendor doc does not list as a substituted field for a ${transport} server — it will be passed through as the literal text "\${${v}}"`);
+        } else if (BUILTINS.has(v)) {
+          OK(`${ctx}: \${${v}} in "${field}"`);
+        } else if (allowed(ctx.split("/")[0], v)) {
+          OK(`${ctx}: \${${v}} in "${field}" — allowlisted with a recorded reason`);
+        } else {
+          FAIL(`${ctx}: \${${v}} in "${field}" is not one of the three documented built-ins and is not in scripts/placeholder-allowlist.json. If the variable is unset the host substitutes NOTHING and the server receives the literal string "\${${v}}" (this crashed microsoft-365, measured 2026-09-13). Fix the spelling, drop it, or allowlist it with a reason.`);
+        }
+      }
+      return;
+    }
+    if (Array.isArray(val)) return val.forEach(x => scanValue(x, field, ctx, transport));
+    if (val && typeof val === "object")
+      for (const [, x] of Object.entries(val)) scanValue(x, field, ctx, transport);
+  };
+
+  const scanManifest = (file, rel, getServers) => {
+    let j; try { j = JSON.parse(readFileSync(file, "utf8")); }
+    catch { return; }                       // parse errors already reported above
+    const map = getServers(j);
+    if (!map || typeof map !== "object") return;
+    for (const [name, srv] of Object.entries(map)) {
+      if (!srv || typeof srv !== "object") continue;
+      checks++;
+      const transport = srv.type ?? (srv.url || srv.httpUrl ? "http" : "stdio");
+      for (const [field, val] of Object.entries(srv))
+        scanValue(val, field, `${rel}[${name}]`, transport);
+    }
+  };
+
+  for (const d of readdirSync(root)) {
+    const pd = join(root, d);
+    if (!statSync(pd).isDirectory() || d.startsWith(".")) continue;
+    const mcp = join(pd, ".mcp.json");
+    const pj  = join(pd, ".claude-plugin", "plugin.json");
+    if (existsSync(mcp)) scanManifest(mcp, `${d}/.mcp.json`, j => j.mcpServers ?? j.servers ?? j);
+    if (existsSync(pj))  scanManifest(pj,  `${d}/.claude-plugin/plugin.json`, j => j.mcpServers);
+  }
+}
+
 // A skill whose JOB is detecting retired mechanisms must name them to detect
 // them. Scanning it for "names a retired mechanism" is the same false positive
 // this factory has now hit three times in one day: v_retired_role_references

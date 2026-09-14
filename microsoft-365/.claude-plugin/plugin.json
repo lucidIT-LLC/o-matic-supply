@@ -24,8 +24,7 @@
       "command": "/bin/sh",
       "args": [
         "${CLAUDE_PLUGIN_ROOT}/bin/launch.sh"
-      ],
-      "cwd": "${CLAUDE_PLUGIN_ROOT}"
+      ]
     }
   },
   "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)"
