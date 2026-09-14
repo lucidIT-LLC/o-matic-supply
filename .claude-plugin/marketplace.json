@@ -42,7 +42,7 @@
       "name": "microsoft-365",
       "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)",
       "source": "./microsoft-365",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "description": "Team Assistant MCP: governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted per tenant with delegated device-code sign-in — no central service, no admin-consent-for-others. Premium Planner / Dataverse (\"Project\") is deliberately out of scope, a separate plugin.",
       "author": {
         "name": "LucidIT, LLC",
