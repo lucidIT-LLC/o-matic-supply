@@ -6,16 +6,16 @@
     "email": "lucideye@icloud.com"
   },
   "metadata": {
-    "description": "o-MATIC Supply \u2014 tools, not people. Governed MCP connectors for WordPress, Microsoft 365, and the O-Matic Server Slate canvas API. Ships MCP servers by design; it is equipment, not staff.",
+    "description": "o-MATIC Supply — tools, not people. Governed MCP connectors for WordPress, Microsoft 365, and the O-Matic Server Slate canvas API. Ships MCP servers by design; it is equipment, not staff.",
     "version": "2026-09-05"
   },
   "plugins": [
     {
       "name": "wordpress",
-      "displayName": "o-MATIC Supply \u2014 WordPress & Elementor",
+      "displayName": "o-MATIC Supply — WordPress & Elementor",
       "source": "./wordpress",
-      "version": "1.3.2",
-      "description": "o-MATIC Supply \u2014 tools, not people. The WordPress and Elementor MCP connectors: site and content operations, Elementor page building, template and theme work, media, and a sandboxed export/import path. Ships MCP servers by design; it is equipment, not staff.",
+      "version": "1.3.3",
+      "description": "o-MATIC Supply — tools, not people. The WordPress and Elementor MCP connectors: site and content operations, Elementor page building, template and theme work, media, and a sandboxed export/import path. Ships MCP servers by design; it is equipment, not staff.",
       "author": {
         "name": "LucidIT, LLC",
         "url": "https://o-matic.ai"
@@ -31,7 +31,7 @@
         "tools"
       ],
       "metadata": {
-        "compatibilityTier": "MCP-host-full-operation ONLY \u2014 this is a tool pack and requires a host that can spawn an MCP server",
+        "compatibilityTier": "MCP-host-full-operation ONLY — this is a tool pack and requires a host that can spawn an MCP server",
         "shipsMcpServer": true,
         "requiresForFullOperation": "a host able to launch stdio MCP servers, plus WordPress/Elementor credentials held by the host",
         "declaredUnder": "known_rules #284 (compatibility gate, halt)",
@@ -40,10 +40,10 @@
     },
     {
       "name": "microsoft-365",
-      "displayName": "o-MATIC Supply \u2014 Team Assistant (Microsoft 365)",
+      "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)",
       "source": "./microsoft-365",
-      "version": "0.1.0",
-      "description": "Team Assistant MCP: governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted per tenant with delegated device-code sign-in \u2014 no central service, no admin-consent-for-others. Premium Planner / Dataverse (\"Project\") is deliberately out of scope, a separate plugin.",
+      "version": "0.1.1",
+      "description": "Team Assistant MCP: governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted per tenant with delegated device-code sign-in — no central service, no admin-consent-for-others. Premium Planner / Dataverse (\"Project\") is deliberately out of scope, a separate plugin.",
       "author": {
         "name": "LucidIT, LLC",
         "url": "https://o-matic.ai"
@@ -63,10 +63,10 @@
         "tools"
       ],
       "metadata": {
-        "compatibilityTier": "MCP-host-full-operation ONLY \u2014 this is a tool pack and requires a host that can spawn an MCP server",
+        "compatibilityTier": "MCP-host-full-operation ONLY — this is a tool pack and requires a host that can spawn an MCP server",
         "shipsMcpServer": true,
         "requiresForFullOperation": "a host able to launch stdio MCP servers, plus an Entra app registration (tenant ID + client ID) the operator controls",
-        "note": "Delegated device-code sign-in only \u2014 every call acts as the signed-in user, credentials never leave the host. No OneNote application-permission tier exists in Graph at all, so OneNote is delegated-only by Microsoft's own design, not a limitation of this plugin."
+        "note": "Delegated device-code sign-in only — every call acts as the signed-in user, credentials never leave the host. No OneNote application-permission tier exists in Graph at all, so OneNote is delegated-only by Microsoft's own design, not a limitation of this plugin."
       }
     }
   ]

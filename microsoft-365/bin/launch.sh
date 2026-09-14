@@ -12,7 +12,7 @@
 #
 # Usage from a manifest:
 #   "command": "/bin/sh"
-#   "args": ["${PLUGIN_ROOT}/bin/launch.sh"]
+#   "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.sh"]
 
 set -u
 
