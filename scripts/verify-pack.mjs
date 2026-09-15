@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // verify-pack.mjs — does a skill pack actually work on a host with no MCP plugin?
+// Version: 1.1.0 (2026-09-15) — adds check 4, the persona gold-record gate (task #745).
 // Exit 1 on any FAIL. Every rule here encodes a failure this factory has already had.
 import { readFileSync, readdirSync, existsSync, statSync, lstatSync } from "node:fs";
 import { join, basename } from "node:path";
@@ -231,6 +232,76 @@ for (const f of walk(root).filter(p => basename(p) === "SKILL.md")) {
   const e = txt.indexOf("<!-- shared:system-5-detection end -->");
   if (s !== -1 && e === -1) FAIL(`${rel}: shared block opened but never closed`);
 }
+
+
+// 4. PERSONA GOLD RECORD — the file-side half of the release gate (task #745).
+//
+// WHY THIS EXISTS. The persona release gate is three sets of DB triggers on
+// factory.persona* (trg_persona_publish_gate, six trg_persona_*_integrity_gate,
+// trg_persona_build_release_gate), proven to refuse 9/9 in
+// factory.fn_persona_gate_selftest(). Every one of them fires ONLY on a
+// database write. A skill authored as a FILE and shipped without ever recording
+// a persona_build row is invisible to all of them — persona_build's own FK
+// refuses the build row with SQLSTATE 23503 before the release gate is even
+// reached, so the gate cannot even be ASKED about an ungoverned persona.
+//
+// Measured 2026-09-15: six skills ship from files whose persona_version is
+// review_status='draft' with ZERO persona_build rows — andy (the pixel-photo-
+// coach skill, shipping 2.5.0), brandy, carver, jake, jo, monet. The database
+// gate refused nothing in any of those six cases because it was never reached.
+//
+// WHY AN ATTESTATION FILE AND NOT A QUERY. verify-pack runs offline, in CI, on
+// a host with no database and no credentials. A check that needs a connection
+// is a check that gets skipped in the one place it must run. So the database
+// exports what it certified into persona-attestation.json (see
+// persona-attest-export.sql, which is the query that generates it) and this
+// check verifies the PACK against that export.
+//
+// IT FAILS CLOSED, DELIBERATELY. A missing attestation file, a skill absent
+// from it, or a stale skill version all FAIL. A skip would reproduce this
+// factory's signature defect — absence indistinguishable from success — inside
+// the control written to catch exactly that.
+const attPath = join(root, "persona-attestation.json");
+const skillDirs = walk(root)
+  .filter(p => basename(p) === "SKILL.md")
+  .map(p => basename(p.replace(/\/SKILL\.md$/, "")));
+
+checks++;
+if (!skillDirs.length) {
+  OK("persona gold record: pack ships no skills");
+} else if (!existsSync(attPath)) {
+  FAIL(`persona-attestation.json missing — ${skillDirs.length} skill(s) ship with no ` +
+       `proof their persona was ever certified. Generate it with persona-attest-export.sql.`);
+} else {
+  let att;
+  try { att = JSON.parse(readFileSync(attPath, "utf8")); OK("persona-attestation.json parses"); }
+  catch (e) { FAIL(`persona-attestation.json invalid JSON: ${e.message}`); }
+  if (att) {
+    const bySkill = new Map((att.personas ?? []).map(x => [x.skill, x]));
+    if (!att.generated_at || !att.tenant) FAIL("persona-attestation.json has no generated_at/tenant provenance");
+    for (const dir of skillDirs) {
+      checks++;
+      const rec = bySkill.get(dir);
+      if (!rec) {
+        FAIL(`${dir}: not in persona-attestation.json — ships with no gold record at all`);
+        continue;
+      }
+      const why = [];
+      if (rec.review_status !== "published") why.push(`review_status='${rec.review_status}'`);
+      if (!rec.identity_signature)           why.push("no identity_signature");
+      if (!(rec.character_bible > 0))        why.push("no character bible");
+      if (!(rec.dimensions > 0))             why.push("zero character dimensions");
+      if (!(rec.builds > 0))                 why.push("no persona_build row — the release gate never ran");
+      if (why.length) FAIL(`${dir}: persona '${rec.agent_name}' is not shippable — ${why.join("; ")}`);
+      else OK(`${dir}: persona '${rec.agent_name}' certified (v${rec.version}, ${rec.builds} build(s))`);
+    }
+    // A persona attested but no longer shipped is drift in the other direction.
+    for (const rec of att.personas ?? [])
+      if (!skillDirs.includes(rec.skill))
+        WARN(`persona-attestation.json lists '${rec.skill}' but the pack ships no such skill`);
+  }
+}
+
 
 console.log(`\n${fails ? "RESULT: FAIL" : "RESULT: PASS"} — ${checks} units checked, ${fails} fail, ${warns} warn\n`);
 process.exit(fails ? 1 : 0);
