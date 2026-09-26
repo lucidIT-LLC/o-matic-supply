@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // verify-pack.mjs — does a skill pack actually work on a host with no MCP plugin?
-// Version: 1.2.0 (2026-09-26) — adds check 5, the retired-persona-name detector (task #777).
+// Version: 1.3.0 (2026-09-26) — adds check 2c, .claude-plugin/.codex-plugin version parity (task #803).
 // Exit 1 on any FAIL. Every rule here encodes a failure this factory has already had.
 import { readFileSync, readdirSync, existsSync, statSync, lstatSync } from "node:fs";
 import { join, basename } from "node:path";
@@ -69,6 +69,24 @@ for (const d of readdirSync(root)) {
     else OK(`${d}/plugin.json declares no mcpServers`);
   }
   if (!pj.skills) WARN(`${d}/plugin.json has no skills path`);
+
+  // .claude-plugin and .codex-plugin manifests must ship in lockstep on
+  // version (task #803, the same defect measured in o-matic-agency: 1.4.12
+  // and 1.4.13 each bumped only .claude-plugin and silently left
+  // .codex-plugin behind, two releases of drift with nothing to catch it).
+  // Manifest SHAPE is not enforced (the two hosts have genuinely different
+  // schemas -- codex nests display fields under "interface", claude does
+  // not -- so only "version" is compared).
+  const codexCp = join(pd, ".codex-plugin", "plugin.json");
+  if (existsSync(codexCp)) {
+    let cj; try { cj = JSON.parse(readFileSync(codexCp, "utf8")); }
+    catch (e) { FAIL(`${d}/.codex-plugin/plugin.json invalid: ${e.message}`); cj = null; }
+    if (cj) {
+      if (cj.version !== pj.version)
+        FAIL(`${d}: version drift -- .claude-plugin/plugin.json is ${pj.version}, .codex-plugin/plugin.json is ${cj.version}`);
+      else OK(`${d}: .claude-plugin and .codex-plugin versions match (${pj.version})`);
+    }
+  }
 }
 
 // 2b. compatibility tier must be declared — known_rules #284 is halt-grade
