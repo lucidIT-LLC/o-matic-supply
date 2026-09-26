@@ -1,0 +1,9 @@
+{
+  "_comment": [
+    "o-matic-supply ships tool packs (wordpress, microsoft-365, slate), not",
+    "persona-named skills, so this list is empty by design -- not an oversight.",
+    "The check still runs so a persona skill added here later is covered from",
+    "day one rather than needing this file created reactively (task #777)."
+  ],
+  "retired": []
+}

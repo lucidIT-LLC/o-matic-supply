@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // verify-pack.mjs — does a skill pack actually work on a host with no MCP plugin?
-// Version: 1.1.0 (2026-09-15) — adds check 4, the persona gold-record gate (task #745).
+// Version: 1.2.0 (2026-09-26) — adds check 5, the retired-persona-name detector (task #777).
 // Exit 1 on any FAIL. Every rule here encodes a failure this factory has already had.
 import { readFileSync, readdirSync, existsSync, statSync, lstatSync } from "node:fs";
 import { join, basename } from "node:path";
@@ -302,6 +302,100 @@ if (!skillDirs.length) {
   }
 }
 
+
+// 5. RETIRED PERSONA NAME DETECTOR (task #777). A persona rename — Pixel ->
+// Andy (decision #538), Rimmer -> Smith (decision #416) — must be caught by a
+// gate, not by the operator reading a diff by hand. scripts/retired-persona-
+// allowlist.json lists {name, replaced_by, decision, reason} for every retired
+// persona name relevant to THIS pack.
+//
+// Scope, deliberately narrow: only files a host actually LOADS as instruction
+// or routing metadata — SKILL.md, and anything under adapters/ or contracts/.
+// A CHANGELOG, an audit record, or a reference README is supposed to name a
+// retired persona; that is how history gets written down, and scanning those
+// genres for it is the same false-positive shape check 3's own EXEMPT comment
+// already documents three times over. The risk this check exists for is a
+// retired name surviving in something a host still reads as live routing.
+//
+// Matching is CASE-SENSITIVE on the capitalized form (e.g. "Pixel", not
+// "pixel"). "Pixel" collides with the ordinary English noun for a picture
+// element, which this pack's own photography domain uses constantly ("measure
+// a single pixel", "pixel-forensics", "pixel statistics") — a case-insensitive
+// match fails on every one of those. The persona name is always written
+// capitalized as a proper noun; the common noun is not.
+//
+// Exemption is WHOLE-PARAGRAPH here, unlike check 3's line-by-line rule for
+// retired mechanisms. A retired persona is explained in continuous prose
+// ("the precedent is X: his lane became Y... because his skill was removed"),
+// not a one-line "call this dead tool" instruction sitting next to an
+// unrelated historical aside — so paragraph-level judgment fits this domain
+// without reopening the false-negative gap check 3 was built against.
+const PERSONA_SCAN_SCOPE = (rel) => /SKILL\.md$/.test(rel) || /\/(adapters|contracts)\//.test(rel);
+const PERSONA_EXEMPT = new RegExp(EXEMPT.source + "|replac|successor|former |is gone|renamed|rename\\b|moved to|four.step|became|\\bremoved\\b", "i");
+{
+  const raPath = join(root, "scripts", "retired-persona-allowlist.json");
+  checks++;
+  if (!existsSync(raPath)) {
+    WARN("no scripts/retired-persona-allowlist.json — retired-persona-name detector has nothing to check against (task #777)");
+  } else {
+    let ra;
+    try { ra = JSON.parse(readFileSync(raPath, "utf8")); OK("retired-persona-allowlist.json parses"); }
+    catch (e) { FAIL(`retired-persona-allowlist.json invalid JSON: ${e.message}`); }
+    const retired = (ra?.retired ?? []).filter(r => {
+      if (!r.name || !r.replaced_by || !r.reason) {
+        FAIL(`retired-persona-allowlist.json entry missing name/replaced_by/reason: ${JSON.stringify(r)}`);
+        return false;
+      }
+      return true;
+    });
+    if (ra && !retired.length) OK("retired-persona-allowlist.json declares no retired names for this pack");
+    const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    // case-INsensitive, whole-token match against a directory's hyphen/underscore
+    // segments — a narrow, deliberate context, not free prose, so the common-word
+    // collision risk that rules out case-insensitivity below does not apply here.
+    const dirHasSegment = (dir, name) =>
+      dir.split(/[-_]/).some(seg => seg.toLowerCase() === name.toLowerCase());
+    // case-SENSITIVE on the capitalized proper-noun form for prose scanning.
+    const proseRe = (n) => new RegExp(`\\b${escape(cap(n))}\\b`);
+
+    // a) a skill's own identity must never BE a retired name — no context
+    //    exempts a skill from naming itself after a persona that no longer exists.
+    for (const dir of skillDirs) {
+      checks++;
+      for (const r of retired)
+        if (dirHasSegment(dir, r.name))
+          FAIL(`${dir}: skill directory IS a retired persona name ('${r.name}', replaced by '${r.replaced_by}' — ${r.decision})`);
+    }
+
+    // b) SKILL.md / adapters / contracts, whole paragraph at a time.
+    if (retired.length) {
+      for (const f of walk(root).filter(p => p.endsWith(".md"))) {
+        const rel = f.replace(root, ".");
+        if (!PERSONA_SCAN_SCOPE(rel)) continue;
+        const txt = readFileSync(f, "utf8");
+        checks++;
+        let para = [], startLine = 1;
+        const flush = () => {
+          if (!para.length) return;
+          const block = para.join("\n");
+          if (!PERSONA_EXEMPT.test(block)) {
+            for (const r of retired)
+              if (proseRe(r.name).test(block))
+                FAIL(`${rel}:${startLine}: names retired persona '${r.name}' as a live reference — replaced by '${r.replaced_by}' (${r.decision})`);
+          }
+          para = [];
+        };
+        txt.split("\n").forEach((line, i) => {
+          if (line.trim() === "") { flush(); startLine = i + 2; return; }
+          if (!para.length) startLine = i + 1;
+          para.push(line);
+        });
+        flush();
+      }
+    }
+  }
+}
 
 console.log(`\n${fails ? "RESULT: FAIL" : "RESULT: PASS"} — ${checks} units checked, ${fails} fail, ${warns} warn\n`);
 process.exit(fails ? 1 : 0);
