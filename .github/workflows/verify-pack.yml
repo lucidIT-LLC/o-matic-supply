@@ -21,6 +21,13 @@ jobs:
       - name: Verify pack integrity
         run: node scripts/verify-pack.mjs .
 
+      # Task #1013 RC-2: the host runs wordpress/dist/*.mjs, not the source.
+      # 1.3.5 shipped new source with a stale bundle and nothing failed. This
+      # rebuilds the bundles and fails when the committed dist/ differs.
+      - name: WordPress dist is a fresh build of the source
+        working-directory: wordpress
+        run: npm ci --ignore-scripts && node scripts/check-dist-fresh.mjs
+
       # Rule #350 (decision #587), task #881. Every plugin in this marketplace
       # is O-Matic-branded by definition and is always gated: a push to `main`
       # IS the release (this repo has no separate release/publish step -- the

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.7 — 2026-09-28
+
+### Fixed
+
+- **1.3.5 shipped a stale bundle** (task #1013, RC-2). The host runs `dist/index.mjs` and `dist/elementor.mjs`, and `dist/` was gitignored, so no release carried it. The marketplace clone kept an ignored `dist/` from an earlier local build, and the host copied it into its cache: 1.3.5's source had the credential fix, its bundles did not, and the plaintext profiles never migrated. `dist/` is now committed, like slate and microsoft-365.
+- `scripts/check-dist-fresh.mjs` rebuilds both bundles with the `build` options and fails when the committed `dist/` differs. It runs in `npm run check` and in CI.
+
 ## 1.3.5 — 2026-09-28
 
 ### Security
