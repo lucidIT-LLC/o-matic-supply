@@ -3,7 +3,8 @@
 A [Model Context Protocol](https://modelcontextprotocol.io) server that gives an AI assistant
 governed read/write access to **a team's actual work** — **Microsoft Planner** (including Goals),
 **Teams channels**, **SharePoint Lists**, and **OneNote** (real rich HTML content, not flat text)
-— over Microsoft Graph.
+— over Microsoft Graph. OneNote is implemented but still in progress — see the note under
+[OneNote](#onenote) before relying on it.
 
 Deliberately out of scope: Premium Planner / "Project" (Dataverse) is a different auth audience
 and a different backend entirely — a separate plugin, by design, not a gap in this one.
@@ -300,6 +301,13 @@ Field keys are **internal** column names, not display names. Pass `includeColumn
 
 ### OneNote
 
+**Status: in progress, not yet acceptance-tested.** The code below is complete and has no
+`NOT_IMPLEMENTED` markers, but — unlike Planner, which has dedicated `etag`/`checklist`/
+`percent-complete`/pagination test coverage (see [Development](#development)) — there is no
+`test/onenote*` suite at all, and no recorded pilot run against a live tenant. Treat it as
+untested code, not proven-working code, until it has both. Verified 2026-09-10: `src/onenote/`
+contains no stubs, but `find test -iname "*onenote*"` returns nothing.
+
 | Tool | Purpose |
 |---|---|
 | `onenote_list_notebooks` | notebooks visible in a scope (`me`, a user, a group, or a site) |
@@ -366,10 +374,15 @@ resolved, in both directions.
 - Resolve people, plans, buckets and labels to names so results are readable.
 - Read Teams channel messages, and replies.
 - Read, create and update SharePoint list items.
-- Read and write real, richly formatted OneNote pages — colors, styling, tables, inline images and
-  file attachments, not flat text.
 - Survive rate limiting: 429 with `Retry-After` honored, 5xx retried with exponential backoff,
   `@odata.nextLink` followed to the last page so nothing is silently truncated.
+
+**In progress**
+
+- **OneNote.** Read and write real, richly formatted OneNote pages — colors, styling, tables,
+  inline images and file attachments, not flat text. The code is complete, but it has no dedicated
+  test coverage and no recorded live-tenant pilot, unlike everything in the Can list above. See the
+  status note under [OneNote](#onenote).
 
 **Cannot**
 
