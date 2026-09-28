@@ -1,9 +1,9 @@
 {
   "name": "team-assistant-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "BUSL-1.1",
-  "description": "Team Assistant \u2014 an MCP server giving an AI assistant governed read/write access to a team's work in Microsoft Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph.",
+  "description": "Team Assistant — an MCP server giving an AI assistant governed read/write access to a team's work in Microsoft Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Ships the pack build of team-assistant-mcp; see SOURCE.json.",
   "type": "module",
   "engines": {
     "node": ">=20.10.0"
@@ -14,24 +14,13 @@
   "main": "dist/index.mjs",
   "files": [
     "dist",
+    "bin",
+    "SOURCE.json",
     "README.md"
   ],
   "scripts": {
-    "compile": "tsc",
-    "build": "esbuild src/index.ts --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs",
-    "postinstall": "npm run build",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .tsc-out",
-    "test": "npm run compile && node --test \".tsc-out/test/**/*.test.js\"",
-    "start": "node dist/index.mjs"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
-    "zod": "^3.25.76"
-  },
-  "devDependencies": {
-    "@types/node": "^20.19.9",
-    "esbuild": "0.28.2",
-    "typescript": "^5.9.2"
+    "start": "node dist/index.mjs",
+    "check": "node scripts/sync-dist.mjs --check",
+    "sync-dist": "node scripts/sync-dist.mjs"
   }
 }

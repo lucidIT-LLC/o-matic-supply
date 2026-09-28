@@ -1,0 +1,9 @@
+{
+  "$comment": "Written by scripts/sync-dist.mjs. dist/index.mjs is `npm run build:pack` of this commit; --check proves it.",
+  "repository": "https://github.com/lucidIT-LLC/team-assistant-mcp",
+  "commit": "8710d7bcc6e99b3c29a211e140726e6f8e675fbc",
+  "serverVersion": "0.3.0",
+  "build": "npm run build:pack",
+  "artifact": "dist/pack/index.mjs",
+  "sha256": "5445c73475aa60728cc10d89c49a8504cb739c6a9d5d833857ac6213d882e0de"
+}

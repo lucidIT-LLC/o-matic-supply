@@ -77,7 +77,7 @@ if [ -z "$NODE_BIN" ]; then
 fi
 
 if [ ! -f "$SERVER_ENTRY" ]; then
-    echo "[team-assistant-mcp] FATAL: $SERVER_ENTRY is missing. Run 'npm install && npm run build' in $PLUGIN_ROOT." >&2
+    echo "[team-assistant-mcp] FATAL: $SERVER_ENTRY is missing. This plugin ships a prebuilt bundle; restore it with 'git checkout -- dist' in $PLUGIN_ROOT, or rebuild with 'node scripts/sync-dist.mjs' (see SOURCE.json)." >&2
     exit 1
 fi
 

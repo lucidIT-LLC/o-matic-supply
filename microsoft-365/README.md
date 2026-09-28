@@ -69,11 +69,25 @@ workflow leans on next, not because they are the point.
 
 ## Install
 
+Nothing to build. This plugin ships `dist/index.mjs`, a self-contained bundle (the MCP SDK and
+zod are inside it), and `bin/launch.sh` runs it with any Node 20+ it can find. There is no
+`npm install` step and no runtime dependency to install.
+
+### Where the code lives
+
+The source is [team-assistant-mcp](https://github.com/lucidIT-LLC/team-assistant-mcp), the one codebase for Team Assistant.
+This plugin carries its **pack** build (`npm run build:pack` there): everything except the
+`dataverse_*` tools, because Premium Planner / Dataverse is deliberately a separate plugin.
+`SOURCE.json` names the exact commit and the bundle's sha256.
+
 ```bash
-npm install
-npm run build
-npm test
+node scripts/sync-dist.mjs --commit <sha>   # rebuild dist/index.mjs from that commit, update SOURCE.json
+node scripts/sync-dist.mjs --check          # fail unless dist/index.mjs is a fresh build of SOURCE.json's commit
 ```
+
+Both need the source checked out beside this repository (`../omatic-m365-mcp`, or pass
+`--source <dir>`) with `npm ci` run there. `--check` refuses (exit 2) rather than report fresh
+when it cannot build.
 
 ## Entra app registration
 
@@ -188,7 +202,7 @@ self-sufficient) are the fallback.
 
 Installing an MCP server is not the same as an assistant knowing how to use it well. Every tool
 here carries a description written to stand on its own, and the server declares an `instructions`
-block (in `src/server.ts`) covering the things a caller gets wrong without it: Planner's mandatory
+block (`instructionsFor()` in [team-assistant-mcp](https://github.com/lucidIT-LLC/team-assistant-mcp)'s `src/server.ts`) covering the things a caller gets wrong without it: Planner's mandatory
 ETag re-read-before-write discipline, the three-state progress model, where Goals sits (real,
 plan-level, non-premium — not Viva Goals), that OneNote is delegated-only, and that SharePoint
 list fields are internal names, not display labels. The goal is that an assistant using this
@@ -222,7 +236,7 @@ rather than to a person, with no user session to keep alive.
 Use this when a client's security review will not accept a tool acting as a named user — which
 is the common outcome at any regulated site.
 
-`src/auth/client-credentials.ts` documents exactly what implementing it requires: a certificate
+`src/auth/client-credentials.ts` in [team-assistant-mcp](https://github.com/lucidIT-LLC/team-assistant-mcp) documents exactly what implementing it requires: a certificate
 credential from the keyring (not a secret in an env var), the `.default` scope, the `.All`
 application permission names, and — importantly — **verification that each Planner operation
 actually works app-only in the target tenant**, because app-only Planner support has historically
@@ -236,7 +250,7 @@ The refresh token is stored in the **macOS Keychain** via the `security` CLI, un
 
 - Never written to a file.
 - Never logged, and never included in an error message — every string leaving the process passes
-  through a redaction filter (`src/util/redact.ts`) as defense in depth.
+  through a redaction filter (`src/util/redact.ts` in the source) as defense in depth.
 - Behind a `TokenStore` interface (`get` / `set` / `delete`), so a Linux Secret Service or
   Windows Credential Manager backend can be added without touching the auth code.
 
@@ -305,8 +319,10 @@ Field keys are **internal** column names, not display names. Pass `includeColumn
 `NOT_IMPLEMENTED` markers, but — unlike Planner, which has dedicated `etag`/`checklist`/
 `percent-complete`/pagination test coverage (see [Development](#development)) — there is no
 `test/onenote*` suite at all, and no recorded pilot run against a live tenant. Treat it as
-untested code, not proven-working code, until it has both. Verified 2026-09-10: `src/onenote/`
-contains no stubs, but `find test -iname "*onenote*"` returns nothing.
+untested code, not proven-working code, until it has both. Verified 2026-09-10 in the
+former copy of the source here; re-checked 2026-09-28 in [team-assistant-mcp](https://github.com/lucidIT-LLC/team-assistant-mcp), where `src/onenote/`
+now lives unchanged: still no `test/onenote*` suite. OneNote is paused by a direction change, not
+unfinished: it is kept working as shipped and is not being developed further.
 
 | Tool | Purpose |
 |---|---|
@@ -409,41 +425,12 @@ resolved, in both directions.
 
 ## Development
 
-```bash
-npm run typecheck   # tsc --noEmit
-npm test            # build, then node --test over dist/test
-```
-
-Tests use the built-in `node:test` runner — no test framework dependency. They cover the
-progress mapping, checklist read-modify-write and delta correctness, the ETag staleness path
-(including a mocked 412 and proof the task and details ETags are never interchanged), the
-pagination follower, retry/rate-limit behavior, the device-code and refresh flows against a
-stubbed token endpoint, and configuration failure messages. No test performs a live Graph call.
-
-```
-src/
-  index.ts              stdio entry point; fails fast on config errors
-  server.ts             MCP server assembly and tool registration
-  config.ts             env + optional file config, no invented defaults
-  context.ts            dependency wiring
-  errors.ts             typed errors; EtagConflictError; never carry a token
-  auth/
-    types.ts            AuthProvider, TokenStore, InteractiveSignInRequired
-    device-code.ts      device authorization grant + silent refresh
-    client-credentials.ts   app-only — interface only, not implemented
-    token-store/        macOS Keychain, in-memory, backend selection
-  graph/
-    client.ts           bearer injection, retry, pagination, typed errors
-    users.ts            email / name → directory GUID resolver
-  planner/
-    types.ts  semantics.ts  api.ts  tools.ts   (includes Goals, beta endpoint)
-  teams/        api.ts  tools.ts        (read + gated posting)
-  sharepoint/   api.ts  tools.ts
-  onenote/      types.ts  api.ts  tools.ts     (rich HTML, multipart images/attachments)
-  tools/        auth.ts  helpers.ts
-  util/         logger.ts (stderr only)  redact.ts  audit.ts (hash-chained tool log)
-test/
-```
+Development, tests and the source layout are in [team-assistant-mcp](https://github.com/lucidIT-LLC/team-assistant-mcp). Its
+`npm test` covers the ETag staleness path, checklist read-modify-write, pagination, write-retry
+safety, request timeouts, the device-code and refresh flows, failures reported as failures rather
+than empty lists, and (`test/editions.test.ts`) that this pack build serves exactly the full
+build's tools minus `dataverse_*`, with instructions that are true for it. No test performs a
+live Graph call.
 
 `stdout` is the MCP transport. All diagnostics go to `stderr`; anything else would corrupt the
 session.
