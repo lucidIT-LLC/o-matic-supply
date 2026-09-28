@@ -35,10 +35,9 @@
     {
       "packs": ["slate"],
       "vars": ["OMATIC_SERVER_URL", "OMATIC_SERVER_TOKEN", "OMATIC_SLATE_CONNECTION", "MCP_PROTOCOL_VERSION"],
-      "reason": "UNMEASURED. Slate is not installed on any host in this estate, so its tolerance of a literal '${OMATIC_SERVER_TOKEN}' has never been observed -- this is the SAME latent shape that crashed microsoft-365. Allowed only so this control can ship green today against a pack nobody can currently run; it is debt, not a clearance.",
-      "risk": "UNKNOWN -- treat as red",
-      "owed": "Install slate, start it with all four variables unset, and either observe it reject the literal values cleanly or remove this entry and the placeholders with it. File as a task.",
-      "recorded": "2026-09-13"
+      "reason": "MEASURED 2026-09-28 (task #778): started dist/index.mjs with all four set to their literal unexpanded '${...}' strings. Before the fix it did not crash but answered initialize with protocolVersion '${MCP_PROTOCOL_VERSION}', a version no client knows. Fixed in 0.1.2: an empty or unexpanded value is read as unset, the handshake returns a real version (the client's when supported), and an unconfigured tool call answers 'Slate is not configured'. Garbage-tolerant, verified by running it.",
+      "risk": "LOW -- measured tolerant after the 0.1.2 fix",
+      "recorded": "2026-09-28"
     }
   ]
 }

@@ -8,12 +8,23 @@
  */
 import { createInterface } from "node:readline";
 
-const PROTOCOL = process.env.MCP_PROTOCOL_VERSION || "2025-06-18";
+// A host that cannot expand "${VAR}" passes the literal string through
+// (measured 2026-09-13: it crashed microsoft-365). Measured on this connector
+// 2026-09-28 (task #778): it did not crash, but it answered initialize with
+// protocolVersion "${MCP_PROTOCOL_VERSION}", a version no client knows. An
+// empty value or an unexpanded placeholder is treated as unset.
+function envValue(name) {
+  const v = (process.env[name] || "").trim();
+  return !v || /^\$\{[^}]*\}$/.test(v) ? "" : v;
+}
+
+const SUPPORTED_PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
+const PROTOCOL = envValue("MCP_PROTOCOL_VERSION") || "2025-06-18";
 const REMOTE_TOOLS = new Set([
   "slate_canvas_create", "slate_canvas_open", "slate_revision_commit",
   "slate_revision_restore", "slate_asset_put", "slate_asset_get",
 ]);
-const DEFAULT_CONNECTION = process.env.OMATIC_SLATE_CONNECTION || "";
+const DEFAULT_CONNECTION = envValue("OMATIC_SLATE_CONNECTION");
 let remoteSession = "";
 
 function fail(message) {
@@ -21,8 +32,8 @@ function fail(message) {
 }
 
 function remoteConfig() {
-  const rawUrl = process.env.OMATIC_SERVER_URL || "";
-  const token = process.env.OMATIC_SERVER_TOKEN || "";
+  const rawUrl = envValue("OMATIC_SERVER_URL");
+  const token = envValue("OMATIC_SERVER_TOKEN");
   if (!rawUrl || !token || !DEFAULT_CONNECTION) {
     fail("Slate is not configured. Set OMATIC_SERVER_URL, OMATIC_SERVER_TOKEN, and OMATIC_SLATE_CONNECTION in the host environment.");
   }
@@ -116,7 +127,10 @@ async function callTool(name, args) {
 
 async function route(message) {
   if (message.method === "initialize") {
-    return result(message.id, { protocolVersion: PROTOCOL, capabilities: { tools: { listChanged: false } }, serverInfo: { name: "o-matic-slate-api", version: "0.1.0" }, instructions: "Slate is a narrow connector to the governed O-Matic Server API. The server—not this proxy—owns authorization, tenant isolation, revisions, assets, and audit." });
+    // answer with the client's version when this connector speaks it
+    const asked = message.params?.protocolVersion;
+    const version = SUPPORTED_PROTOCOLS.includes(asked) ? asked : PROTOCOL;
+    return result(message.id, { protocolVersion: version, capabilities: { tools: { listChanged: false } }, serverInfo: { name: "o-matic-slate-api", version: "0.1.0" }, instructions: "Slate is a narrow connector to the governed O-Matic Server API. The server—not this proxy—owns authorization, tenant isolation, revisions, assets, and audit." });
   }
   if (message.method === "notifications/initialized") return null;
   if (message.method === "ping") return result(message.id, {});
@@ -135,6 +149,9 @@ function write(value) { process.stdout.write(`${JSON.stringify(value)}\n`); }
 if (process.argv.includes("--self-test")) {
   if (REMOTE_TOOLS.size !== 6 || !REMOTE_TOOLS.has("slate_revision_restore")) fail("Slate tool allowlist is incomplete.");
   if (DEFAULT_CONNECTION && DEFAULT_CONNECTION.length > 400) fail("Configured Slate connection is invalid.");
+  process.env.__SLATE_PROBE = "${OMATIC_SERVER_TOKEN}";
+  if (envValue("__SLATE_PROBE") !== "") fail("An unexpanded ${VAR} placeholder was read as a value.");
+  if (!SUPPORTED_PROTOCOLS.includes(PROTOCOL)) fail(`MCP_PROTOCOL_VERSION ${PROTOCOL} is not one this connector speaks.`);
   console.log("Slate Supply connector self-test: PASS");
   process.exit(0);
 }

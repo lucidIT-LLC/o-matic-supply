@@ -1,6 +1,6 @@
 {
   "name": "slate",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Connect Codex to the governed Slate canvas API on the installed O-Matic Server.",
   "author": {"name": "LucidIT, LLC", "url": "https://o-matic.ai"},
   "homepage": "https://o-matic.ai",
