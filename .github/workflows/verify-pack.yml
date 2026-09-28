@@ -37,6 +37,9 @@ jobs:
       - name: Spirit Gate check (rule #350)
         if: github.event_name != 'pull_request'
         env:
+          # No default URL in the script (Smith #1013, as phot-o-MATIC P5): the
+          # endpoint is a repository variable, like the token is a secret.
+          OMATIC_MCP_URL: ${{ vars.OMATIC_MCP_URL }}
           OMATIC_MCP_TOKEN: ${{ secrets.OMATIC_MCP_TOKEN }}
         run: node scripts/spirit-gate-check.mjs .
 
