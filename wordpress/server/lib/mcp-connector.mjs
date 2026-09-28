@@ -1,4 +1,5 @@
 import { createInterface } from "node:readline";
+import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { request as httpRequest } from "node:http";
@@ -9,6 +10,43 @@ const DEFAULT_PROTOCOL_VERSION = "2025-06-18";
 const TOOL_CACHE_MS = 10000;
 const DEFAULT_TOOL_CALLS_PER_MINUTE = 120;
 const DEFAULT_RESPONSE_BODY_LIMIT_BYTES = 2 * 1024 * 1024;
+const SECURITY_BIN = "/usr/bin/security";
+const KEYCHAIN_ITEM_NOT_FOUND = 44; // security(1) exit status for errSecItemNotFound, measured on macOS 27.2.
+
+// macOS Keychain access through security(1). execFileSync never spawns a
+// shell, so the password travels as one argv element and is never parsed.
+// Every failure is rethrown as a NEW error carrying only the exit status: the
+// original error's message quotes the full command line (the password
+// included) and its stdout is the password on a successful read.
+export function createMacKeychain({ execFile = execFileSync, platform = process.platform, securityPath = SECURITY_BIN } = {}) {
+  const available = platform === "darwin";
+  function run(args) {
+    if (!available) throw keychainError(`the macOS Keychain is not available on this host (platform ${platform})`, null);
+    try {
+      return execFile(securityPath, args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 15000, windowsHide: true });
+    } catch (error) {
+      const status = typeof error?.status === "number" ? error.status : null;
+      throw keychainError(status === null ? "security(1) could not be run" : `security(1) exited ${status}`, status);
+    }
+  }
+  return {
+    available,
+    platform,
+    get({ service, account }) {
+      const out = String(run(["find-generic-password", "-s", service, "-a", account, "-w"]));
+      return out.endsWith("\n") ? out.slice(0, -1) : out;
+    },
+    set({ service, account }, value) {
+      run(["add-generic-password", "-U", "-s", service, "-a", account, "-w", String(value)]);
+    },
+  };
+}
+
+function keychainError(message, status) {
+  const error = new Error(message);
+  error.keychainStatus = status;
+  return error;
+}
 
 export function createConnectorServer(options) {
   const config = normalizeOptions(options);
@@ -27,7 +65,10 @@ export function createConnectorServer(options) {
     toolCache: null,
     toolCallTimes: [],
     profile: envValue(config.env.profile) || DEFAULT_PROFILE,
+    secretCache: new Map(),
+    migrationNotes: new Map(),
   };
+  const keychain = config.keychain || createMacKeychain();
 
   if (process.argv.includes("--self-test")) {
     runSelfTest(config, state);
@@ -174,12 +215,14 @@ export function createConnectorServer(options) {
     const profileName = cleanProfileName(args.profile || state.profile);
     const siteUrl = normalizeSiteUrl(requiredString(args.site_url, "site_url"));
     const username = requiredString(args.username, "username");
-    const password = resolveApplicationPassword(args);
+    const password = resolveApplicationPassword(args, { profileName, siteUrl, username });
     const mcpPath = normalizePath(args.mcp_path || config.defaultMcpPath, config.defaultMcpPath);
     const verify = args.verify !== false;
     const verifyMcp = args.verify_mcp ?? config.verifyMcpOnConfigure;
     const configPath = resolveConfigPath(args.factory_root);
     const now = new Date().toISOString();
+    // The in-memory profile carries the resolved value for verification only.
+    // It is never written: storedProfile() below drops it and keeps the reference.
     const profile = {
       siteUrl,
       username,
@@ -214,16 +257,21 @@ export function createConnectorServer(options) {
       };
     }
 
-    const file = readFactoryInfo(configPath, { allowMissing: true });
+    // A raw password goes into the Keychain only after verification passed,
+    // and is read back before the file is allowed to point at it.
+    if (password.reference.source === "keychain") storeInKeychain(password.reference, password.value);
+
+    const file = loadFactoryInfo(configPath);
     const existing = file.profiles?.[profileName];
     file.version = 1;
     file.connector = config.connectorName;
     file.profiles = file.profiles || {};
-    file.profiles[profileName] = {
+    file.profiles[profileName] = storedProfile({
       ...profile,
+      credential: password.reference,
       createdAt: existing?.createdAt || now,
-    };
-    writeFactoryInfo(configPath, file);
+    });
+    persistFactoryInfo(configPath, file);
     ensureFactoryInfoGitignore(configPath);
     state.profile = profileName;
     resetUpstreamCache();
@@ -237,8 +285,10 @@ export function createConnectorServer(options) {
         verify,
         verifyMcp,
         passwordSource: password.source,
+        secretWrittenToFile: false,
         warnings: password.warning ? [password.warning] : [],
         connection: redactProfile(file.profiles[profileName]),
+        ...migrationReport(configPath),
       },
       null,
       2
@@ -248,11 +298,19 @@ export function createConnectorServer(options) {
   async function statusProfile(args) {
     const profileName = cleanProfileName(args.profile || state.profile);
     const configPath = resolveConfigPath(args.factory_root);
-    const file = readFactoryInfo(configPath, { allowMissing: true });
+    const file = loadFactoryInfo(configPath);
     const env = envProfile();
     const profile = env || file.profiles?.[profileName];
     const source = env ? "environment" : "factory_info";
-    const ready = Boolean(profile && hasRequiredProfile(profile));
+    let credentialError = null;
+    if (profile) {
+      try {
+        secretFor(profile);
+      } catch (error) {
+        credentialError = safeErrorMessage(error);
+      }
+    }
+    const ready = Boolean(profile && hasRequiredProfile(profile) && !credentialError);
     const payload = {
       ok: Boolean(profile),
       configured: Boolean(profile),
@@ -262,6 +320,8 @@ export function createConnectorServer(options) {
       profile: profileName,
       connector: config.connectorName,
       connection: profile ? redactProfile(profile) : null,
+      ...(credentialError ? { credentialError } : {}),
+      ...migrationReport(configPath),
     };
 
     if (profile && args.verify === true) {
@@ -287,23 +347,30 @@ export function createConnectorServer(options) {
   function forgetProfile(args) {
     const profileName = cleanProfileName(args.profile || state.profile);
     const configPath = resolveConfigPath(args.factory_root);
-    const file = readFactoryInfo(configPath, { allowMissing: true });
-    const existed = Boolean(file.profiles?.[profileName]);
+    const file = loadFactoryInfo(configPath);
+    const removedProfile = file.profiles?.[profileName];
+    const existed = Boolean(removedProfile);
     if (existed) {
       delete file.profiles[profileName];
-      writeFactoryInfo(configPath, file);
+      persistFactoryInfo(configPath, file);
     }
     resetUpstreamCache();
-    return JSON.stringify({ ok: true, removed: existed, configPath, profile: profileName }, null, 2);
+    // The Keychain item is left in place on purpose: another project's profile
+    // can reference the same item, and deleting a credential is not undoable.
+    const keychainItemRetained =
+      removedProfile?.credential?.source === "keychain"
+        ? { service: removedProfile.credential.service, account: removedProfile.credential.account }
+        : undefined;
+    return JSON.stringify({ ok: true, removed: existed, configPath, profile: profileName, keychainItemRetained }, null, 2);
   }
 
   function listProfiles(args) {
     const configPath = resolveConfigPath(args.factory_root);
-    const file = readFactoryInfo(configPath, { allowMissing: true });
+    const file = loadFactoryInfo(configPath);
     const profiles = Object.fromEntries(
       Object.entries(file.profiles || {}).map(([name, profile]) => [name, redactProfile(profile)])
     );
-    return JSON.stringify({ ok: true, configPath, connector: config.connectorName, profiles }, null, 2);
+    return JSON.stringify({ ok: true, configPath, connector: config.connectorName, profiles, ...migrationReport(configPath) }, null, 2);
   }
 
   function activateProfile(args) {
@@ -313,7 +380,7 @@ export function createConnectorServer(options) {
     if (env) {
       throw new Error(`Environment configuration is active for ${config.displayName}; unset ${config.env.siteUrl} before switching stored profiles.`);
     }
-    const file = readFactoryInfo(configPath, { allowMissing: true });
+    const file = loadFactoryInfo(configPath);
     const profile = file.profiles?.[profileName];
     if (!profile) throw new Error(`${config.displayName} profile "${profileName}" was not found at ${configPath}.`);
     state.profile = profileName;
@@ -325,7 +392,7 @@ export function createConnectorServer(options) {
     const profileName = cleanProfileName(args.profile || state.profile);
     const configPath = resolveConfigPath(args.factory_root);
     const env = envProfile();
-    const file = readFactoryInfo(configPath, { allowMissing: true });
+    const file = loadFactoryInfo(configPath);
     const profile = env || file.profiles?.[profileName];
     if (!profile) throw new Error(`${config.displayName} profile "${profileName}" was not found at ${configPath}.`);
     const mcp = await verifyMcpSurface(profile);
@@ -335,15 +402,15 @@ export function createConnectorServer(options) {
       );
     }
     if (!env) {
-      file.profiles[profileName] = {
+      file.profiles[profileName] = storedProfile({
         ...profile,
         mcp: {
           verifiedAt: new Date().toISOString(),
           ...mcp,
         },
         updatedAt: new Date().toISOString(),
-      };
-      writeFactoryInfo(configPath, file);
+      });
+      persistFactoryInfo(configPath, file);
     }
     state.profile = profileName;
     resetUpstreamCache();
@@ -363,7 +430,7 @@ export function createConnectorServer(options) {
   function usageGuide(args) {
     const includeStoredProfile = args.include_profile !== false;
     const configPath = resolveConfigPath(args.factory_root);
-    const file = readFactoryInfo(configPath, { allowMissing: true });
+    const file = loadFactoryInfo(configPath);
     const profileName = cleanProfileName(args.profile || state.profile);
     const profile = includeStoredProfile ? file.profiles?.[profileName] : null;
     return JSON.stringify(
@@ -391,7 +458,7 @@ export function createConnectorServer(options) {
     if (env) return { profile: env, source: "environment" };
 
     const configPath = resolveConfigPath();
-    const file = readFactoryInfo(configPath, { allowMissing: true });
+    const file = loadFactoryInfo(configPath);
     const profile = file.profiles?.[state.profile] || file.profiles?.[DEFAULT_PROFILE];
     if (!profile && !allowMissing) {
       throw new Error(
@@ -404,10 +471,11 @@ export function createConnectorServer(options) {
   function envProfile() {
     const siteUrl = firstEnvValue(config.env.siteUrl, ...config.env.siteUrlFallbacks);
     if (!siteUrl) return null;
+    const passwordEnv = firstEnvName(config.env.appPassword, ...config.env.appPasswordFallbacks);
     return {
       siteUrl: normalizeSiteUrl(siteUrl),
       username: firstEnvValue(config.env.username, ...config.env.usernameFallbacks),
-      applicationPassword: firstEnvValue(config.env.appPassword, ...config.env.appPasswordFallbacks),
+      credential: passwordEnv ? { source: "env", env: passwordEnv } : null,
       mcpPath: normalizePath(envValue(config.env.mcpPath) || config.defaultMcpPath, config.defaultMcpPath),
       restApiRoot: normalizeOptionalUrl(envValue(config.env.restApiRoot)),
       createdAt: null,
@@ -415,20 +483,199 @@ export function createConnectorServer(options) {
     };
   }
 
-  function resolveApplicationPassword(args) {
+  function resolveApplicationPassword(args, { profileName, siteUrl, username }) {
     const envName = String(args.application_password_env || "").trim();
     if (envName) {
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(envName)) {
+        throw new Error("application_password_env must be an environment variable NAME, not a value.");
+      }
       const value = envValue(envName);
-      if (!value) throw new Error(`application_password_env "${envName}" is not set or is a placeholder.`);
-      return { value, source: `env:${envName}` };
+      if (!value) throw new Error(`application_password_env "${envName}" is not set or is a placeholder.${envOnlyHint()}`);
+      return { value, source: `env:${envName}`, reference: { source: "env", env: envName } };
     }
     const value = requiredString(args.application_password, "application_password or application_password_env");
+    if (!keychain.available) {
+      throw new Error(
+        `A raw application_password cannot be stored on this host: the macOS Keychain is not available (platform ${keychain.platform}), and the factory file never holds a secret. Put the password in an environment variable and pass application_password_env instead.`
+      );
+    }
+    const reference = keychainReference(profileName, siteUrl, username);
     return {
       value,
-      source: "direct_tool_argument",
+      source: "keychain",
+      reference,
       warning:
-        "Direct Application Password entry can be retained in host tool-call logs. Prefer application_password_env for real projects.",
+        "Direct Application Password entry can be retained in host tool-call logs. The value was stored in the macOS Keychain, not in the factory file; prefer application_password_env for real projects.",
     };
+  }
+
+  function envOnlyHint() {
+    return keychain.available ? "" : ` This host (platform ${keychain.platform}) has no macOS Keychain; environment variables are the only credential source here.`;
+  }
+
+  function keychainReference(profileName, siteUrl, username) {
+    return {
+      source: "keychain",
+      service: `o-matic.${config.connectorName}-connector`,
+      account: `${profileName}/${username}@${new URL(siteUrl).host}`,
+    };
+  }
+
+  function refKey(ref) {
+    return `${ref.service}\u0000${ref.account}`;
+  }
+
+  function storeInKeychain(ref, value) {
+    keychain.set(ref, value);
+    let readBack;
+    try {
+      readBack = keychain.get(ref);
+    } catch (error) {
+      throw new Error(`The Keychain write for service "${ref.service}", account "${ref.account}" could not be read back (${error.message}).`);
+    }
+    if (readBack !== value) {
+      throw new Error(`The Keychain item for service "${ref.service}", account "${ref.account}" did not read back identically; nothing was saved.`);
+    }
+    state.secretCache.set(refKey(ref), value);
+  }
+
+  // Resolve a profile's Application Password at use time. Stored profiles hold
+  // a reference only; the value lives in the environment or the Keychain.
+  function secretFor(profile) {
+    const ref = profile?.credential;
+    if (!ref) {
+      // Legacy plaintext that could not be migrated (no Keychain on this host).
+      if (profile?.applicationPassword) return profile.applicationPassword;
+      throw new Error(`${config.displayName} Application Password is missing: the profile holds no credential reference. Set ${config.env.appPassword} or call ${config.toolBase}_configure with application_password_env.${envOnlyHint()}`);
+    }
+    if (ref.source === "env") {
+      const value = envValue(ref.env);
+      if (!value) {
+        throw new Error(`Application Password environment variable "${ref.env}" is not set in this connector's environment.${envOnlyHint()}`);
+      }
+      return value;
+    }
+    if (ref.source === "keychain") {
+      if (!keychain.available) {
+        throw new Error(
+          `This profile's Application Password is in a macOS Keychain item (service "${ref.service}", account "${ref.account}"), but this host (platform ${keychain.platform}) has no Keychain; only environment variables resolve here. Reconfigure with application_password_env.`
+        );
+      }
+      const key = refKey(ref);
+      if (state.secretCache.has(key)) return state.secretCache.get(key);
+      let value;
+      try {
+        value = keychain.get(ref);
+      } catch (error) {
+        if (error.keychainStatus === KEYCHAIN_ITEM_NOT_FOUND) {
+          throw new Error(
+            `Keychain item not found: service "${ref.service}", account "${ref.account}". Re-run ${config.toolBase}_configure with application_password_env, or with application_password to store it in the Keychain again.`
+          );
+        }
+        throw new Error(`Keychain read failed for service "${ref.service}", account "${ref.account}" (${error.message}). Is the login keychain unlocked?`);
+      }
+      if (!value) throw new Error(`Keychain item for service "${ref.service}", account "${ref.account}" is empty.`);
+      state.secretCache.set(key, value);
+      return value;
+    }
+    throw new Error(`Unknown credential source "${String(ref.source)}" in ${config.displayName} profile.`);
+  }
+
+  function hasRequiredProfile(profile) {
+    return Boolean(profile?.siteUrl && profile?.username && (profile?.credential || profile?.applicationPassword));
+  }
+
+  function authHeader(profile) {
+    return `Basic ${Buffer.from(`${profile.username}:${secretFor(profile)}`).toString("base64")}`;
+  }
+
+  // What may be written to disk: everything except a secret value.
+  function storedProfile(profile) {
+    const { applicationPassword, ...rest } = profile;
+    if (!rest.credential) throw new Error("Refusing to save a profile without a credential reference.");
+    return rest;
+  }
+
+  function loadFactoryInfo(configPath) {
+    const file = readFactoryInfo(configPath, { allowMissing: true });
+    migrateLegacySecrets(configPath, file);
+    return file;
+  }
+
+  function persistFactoryInfo(configPath, file) {
+    for (const profile of Object.values(file.profiles || {})) {
+      if (isRecord(profile) && profile.credential) delete profile.applicationPassword;
+    }
+    writeFactoryInfo(configPath, file);
+  }
+
+  // A profile written before 1.3.5 holds its Application Password in plaintext.
+  // Move each value into the Keychain, confirm it reads back, then rewrite the
+  // file atomically with the reference. The value is never printed or logged.
+  function migrateLegacySecrets(configPath, file) {
+    const legacy = Object.entries(file.profiles || {}).filter(
+      ([, profile]) => isRecord(profile) && typeof profile.applicationPassword === "string" && profile.applicationPassword
+    );
+    if (!legacy.length) return;
+    const note = { migrated: [], failed: [], blocked: null, at: new Date().toISOString() };
+    let changed = false;
+    for (const [name, profile] of legacy) {
+      if (profile.credential) {
+        // Reference already present: the plaintext copy is redundant once the reference resolves.
+        try {
+          secretFor({ credential: profile.credential });
+          delete profile.applicationPassword;
+          changed = true;
+          note.migrated.push(name);
+        } catch (error) {
+          note.failed.push({ profile: name, error: safeErrorMessage(error) });
+        }
+        continue;
+      }
+      if (/^\[.*redacted.*\]$/i.test(profile.applicationPassword)) continue;
+      if (!keychain.available) {
+        note.blocked = `Plaintext Application Passwords remain in ${configPath}: this host (platform ${keychain.platform}) has no macOS Keychain. Move each into an environment variable and reconfigure with application_password_env.`;
+        continue;
+      }
+      if (!profile.siteUrl || !profile.username) {
+        note.failed.push({ profile: name, error: "profile has no siteUrl or username to name a Keychain item" });
+        continue;
+      }
+      try {
+        const ref = keychainReference(name, profile.siteUrl, profile.username);
+        storeInKeychain(ref, profile.applicationPassword);
+        profile.credential = ref;
+        profile.credentialMigratedAt = note.at;
+        delete profile.applicationPassword;
+        changed = true;
+        note.migrated.push(name);
+      } catch (error) {
+        note.failed.push({ profile: name, error: safeErrorMessage(error) });
+      }
+    }
+    if (changed) writeFactoryInfo(configPath, file);
+    state.migrationNotes.set(configPath, note);
+  }
+
+  function migrationReport(configPath) {
+    const note = state.migrationNotes.get(configPath);
+    if (!note) return {};
+    return {
+      credentialMigration: {
+        migratedToKeychain: note.migrated,
+        failed: note.failed,
+        blocked: note.blocked,
+        at: note.at,
+      },
+    };
+  }
+
+  function describeCredential(profile) {
+    const ref = profile?.credential;
+    if (ref?.source === "env") return { storedIn: "environment", env: ref.env, set: Boolean(envValue(ref.env)) };
+    if (ref?.source === "keychain") return { storedIn: "macos_keychain", service: ref.service, account: ref.account };
+    if (profile?.applicationPassword) return { storedIn: "factory_file_plaintext", migrationPending: true };
+    return { storedIn: null };
   }
 
   async function getUpstreamTools(profile) {
@@ -709,7 +956,7 @@ export function createConnectorServer(options) {
   function resolveConfigPath(factoryRoot) {
     const configPath = envValue(config.env.configPath);
     if (configPath) return resolve(configPath);
-    const root = resolveFactoryRoot(factoryRoot);
+    const root = resolveConnectorConfigRoot(factoryRoot);
     return join(root, ".omatic", config.factoryFileName);
   }
 
@@ -741,7 +988,7 @@ export function createConnectorServer(options) {
     if (!hasRequiredProfile(profile)) {
       if (!profile?.siteUrl) throw new Error(`${config.displayName} site URL is missing.`);
       if (!profile?.username) throw new Error(`${config.displayName} username is missing.`);
-      if (!profile?.applicationPassword) throw new Error("WordPress Application Password is missing.");
+      if (!profile?.credential && !profile?.applicationPassword) throw new Error(`WordPress Application Password is missing.${envOnlyHint()}`);
     }
   }
 
@@ -749,7 +996,8 @@ export function createConnectorServer(options) {
     return {
       siteUrl: profile.siteUrl,
       username: profile.username,
-      applicationPassword: profile.applicationPassword ? "[stored-redacted]" : "",
+      applicationPassword: profile.credential || profile.applicationPassword ? "[stored-redacted]" : "",
+      credential: describeCredential(profile),
       mcpPath: profile.mcpPath || config.defaultMcpPath,
       restApiRoot: profile.restApiRoot || null,
       wordpressVersion: profile.wordpressVersion || null,
@@ -766,7 +1014,7 @@ function createBuiltinTools(config) {
     {
       name: `${config.toolBase}_configure`,
       title: `Configure ${config.displayName}`,
-      description: `Store this project's ${config.displayName} connection in factory information. Requires a WordPress site URL, username, and Application Password.`,
+      description: `Store this project's ${config.displayName} connection in factory information. Requires a WordPress site URL, username, and Application Password. The factory file stores a reference only, never the password: an environment variable name, or (macOS only) a Keychain item.`,
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -787,12 +1035,12 @@ function createBuiltinTools(config) {
           application_password: {
             type: "string",
             description:
-              "WordPress Application Password. Direct entry can be logged by the host; prefer application_password_env when possible.",
+              "WordPress Application Password. macOS only: stored in the login Keychain and referenced from the factory file. Direct entry can be logged by the host; prefer application_password_env when possible.",
           },
           application_password_env: {
             type: "string",
             description:
-              "Name of an environment variable containing the WordPress Application Password. Recommended over direct entry.",
+              "NAME of an environment variable containing the WordPress Application Password. Only the name is stored; the value is read at use time. Recommended over direct entry, and the only option on non-macOS hosts.",
           },
           mcp_path: {
             type: "string",
@@ -826,7 +1074,7 @@ function createBuiltinTools(config) {
     {
       name: `${config.toolBase}_status`,
       title: `${config.displayName} Status`,
-      description: `Show the active ${config.displayName} profile, redacted config, and optional live credential check.`,
+      description: `Show the active ${config.displayName} profile, redacted config, where its secret lives (env name or Keychain item), and optional live credential check.`,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -1154,25 +1402,36 @@ function writeFactoryInfo(configPath, data) {
   }
 }
 
-function resolveFactoryRoot(factoryRoot) {
+// WordPress/Elementor connector config lookup: find the project folder whose
+// .omatic/ holds this connector's own profile file (wordpress-factory.json or
+// elementor-factory.json). It locates connector configuration only; it does not
+// identify, select or start a factory. Factory identity comes from the o-MATIC
+// Server's startup packet, never from a folder (decision #334).
+//
+// Order: an explicit factory_root argument or OMATIC_PROJECT_ROOT/PROJECT_ROOT;
+// then the host's workspace variable; then the nearest ancestor of cwd that has
+// an .omatic/ directory; then cwd.
+function resolveConnectorConfigRoot(factoryRoot) {
   const explicit = factoryRoot || envValue("OMATIC_PROJECT_ROOT") || envValue("PROJECT_ROOT") || "";
   if (explicit) return resolve(explicit);
 
-  // Codex binds no project dir into cwd — the launcher forces cwd=${PLUGIN_ROOT}
-  // (see .mcp.json) — and it does not set OMATIC_PROJECT_ROOT. It exports the
-  // workspace path in CODEX_WORKSPACE instead. Without this, a zero-config Codex
-  // factory walks up from the plugin install dir, finds no .omatic, and reports
-  // unconfigured while a perfectly good factory.json sits in the workspace.
-  //
-  // This mirrors omatic-server-connection/server/factory.js:detectPlatform,
-  // which already reads the same three. envValue strips an unresolved "${VAR}"
-  // literal, so a host that leaves the placeholder unsubstituted is treated as
-  // absent rather than resolving the factory root to the string "${CODEX_...}".
-  const codexWorkspace =
-    envValue("CODEX_WORKSPACE") || envValue("CODEX_PROJECT_ROOT") || envValue("CODEX_WORKSPACE_ROOT") || "";
-  if (codexWorkspace) return resolve(codexWorkspace);
+  const hostWorkspace = hostWorkspaceRoot();
+  if (hostWorkspace) return resolve(hostWorkspace);
 
-  let current = process.cwd();
+  return nearestAncestorWithConnectorConfig(process.cwd()) || process.cwd();
+}
+
+// Codex starts the connector with cwd set to the plugin install directory and
+// does not set OMATIC_PROJECT_ROOT; it exports the workspace path instead.
+// Without this, a zero-config Codex project walks up from the plugin directory,
+// finds no .omatic/, and reports unconfigured while its profile file sits in the
+// workspace. envValue treats an unsubstituted "${VAR}" literal as unset.
+function hostWorkspaceRoot() {
+  return envValue("CODEX_WORKSPACE") || envValue("CODEX_PROJECT_ROOT") || envValue("CODEX_WORKSPACE_ROOT") || "";
+}
+
+function nearestAncestorWithConnectorConfig(start) {
+  let current = start;
   for (;;) {
     try {
       if (statSync(join(current, ".omatic")).isDirectory()) return current;
@@ -1180,10 +1439,9 @@ function resolveFactoryRoot(factoryRoot) {
       // Keep walking up.
     }
     const parent = dirname(current);
-    if (parent === current) break;
+    if (parent === current) return "";
     current = parent;
   }
-  return process.cwd();
 }
 
 function textResult(id, text) {
@@ -1207,13 +1465,6 @@ function writeJson(payload) {
   process.stdout.write(`${JSON.stringify(payload)}\n`);
 }
 
-function authHeader(profile) {
-  return `Basic ${Buffer.from(`${profile.username}:${profile.applicationPassword}`).toString("base64")}`;
-}
-
-function hasRequiredProfile(profile) {
-  return Boolean(profile?.siteUrl && profile?.username && profile?.applicationPassword);
-}
 
 function requiredString(value, name) {
   const clean = String(value || "").trim();
@@ -1249,6 +1500,13 @@ function headerValue(value) {
 function isLoopbackHost(hostname) {
   const host = String(hostname || "").toLowerCase();
   return host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1" || host.startsWith("127.") || host === "::1" || host === "[::1]";
+}
+
+function firstEnvName(...names) {
+  for (const name of names) {
+    if (envValue(name)) return name;
+  }
+  return "";
 }
 
 function firstEnvValue(...names) {
@@ -1338,7 +1596,7 @@ function runSelfTest(config) {
   const redacted = {
     siteUrl: "https://example.com",
     username: "admin",
-    applicationPassword: "[stored-redacted]",
+    credential: { source: "env", env: "TEST_CONNECTOR_APP_PASSWORD" },
     mcpPath: config.defaultMcpPath,
   };
   const tmpRoot = join(process.cwd(), `.tmp-self-test-${config.connectorName}`);

@@ -1,7 +1,7 @@
 {
   "schema": "lucidit-agent-pack-v1",
   "name": "o-matic-wordpress-factory",
-  "version": "1.3.2",
+  "version": "1.3.5",
   "display_name": "o-MATIC WordPress Factory",
   "release": {
     "channel": "stable",

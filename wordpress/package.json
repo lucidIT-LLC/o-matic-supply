@@ -1,6 +1,6 @@
 {
   "name": "o-matic-wordpress-factory",
-  "version": "1.3.2",
+  "version": "1.3.5",
   "private": true,
   "description": "o-MATIC WordPress Factory plugin with bundled brand, build, writing, and visual skills plus separate WordPress and Elementor MCP connectors.",
   "type": "module",
@@ -9,7 +9,7 @@
     "o-matic-elementor-connector": "./dist/elementor.mjs"
   },
   "scripts": {
-    "check": "node --check server/index.mjs && node --check server/elementor.mjs && node --check server/lib/mcp-connector.mjs && node --check scripts/smoke-mcp.mjs && node --check scripts/sync-bundled-skills.mjs && node server/index.mjs --self-test && node server/elementor.mjs --self-test && node scripts/smoke-mcp.mjs",
+    "check": "node --check server/index.mjs && node --check server/elementor.mjs && node --check server/lib/mcp-connector.mjs && node --check scripts/smoke-mcp.mjs && node --check scripts/sync-bundled-skills.mjs && node server/index.mjs --self-test && node server/elementor.mjs --self-test && node scripts/smoke-mcp.mjs && node --check scripts/test-credentials.mjs && node scripts/test-credentials.mjs",
     "build": "esbuild server/index.mjs --bundle --minify --platform=node --format=esm --outfile=dist/index.mjs && esbuild server/elementor.mjs --bundle --minify --platform=node --format=esm --outfile=dist/elementor.mjs",
     "postinstall": "npm run build",
     "skills:sync": "node scripts/sync-bundled-skills.mjs",

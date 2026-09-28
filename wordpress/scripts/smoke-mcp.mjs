@@ -19,7 +19,7 @@ writeFileSync(
         default: {
           siteUrl: "https://example.com",
           username: "admin",
-          applicationPassword: "example-only",
+          credential: { source: "env", env: "OMATIC_SMOKE_APP_PASSWORD" },
           mcpPath: "/wp-json/mcp/mcp-adapter-default-server",
           restApiRoot: "https://example.com/wp-json/",
           mcp: {
@@ -41,7 +41,7 @@ writeFileSync(
         "client-a": {
           siteUrl: "https://client-a.example",
           username: "admin",
-          applicationPassword: "example-only",
+          credential: { source: "env", env: "OMATIC_SMOKE_APP_PASSWORD" },
           mcpPath: "/wp-json/mcp/mcp-adapter-default-server",
           restApiRoot: "https://client-a.example/wp-json/",
           mcp: {
@@ -73,6 +73,7 @@ const child = spawn(process.execPath, [serverPath], {
     ...process.env,
     OMATIC_PROJECT_ROOT: projectRoot,
     OMATIC_WORDPRESS_FACTORY_PROFILE: "default",
+    OMATIC_SMOKE_APP_PASSWORD: "example-only",
     MCP_PROTOCOL_VERSION: "2025-06-18",
   },
   stdio: ["pipe", "pipe", "pipe"],

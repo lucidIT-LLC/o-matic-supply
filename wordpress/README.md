@@ -144,11 +144,20 @@ By default the connectors store project connection profiles at:
 <OMATIC_PROJECT_ROOT>/.omatic/elementor-factory.json
 ```
 
-Files are written with `0600` permissions. The connectors also write `.omatic/.gitignore` entries for their factory files and temporary writes. These files contain Application Passwords, so do not commit them.
+Files are written with `0600` permissions. The connectors also write `.omatic/.gitignore` entries for their factory files and temporary writes.
+
+**The factory file never holds an Application Password (1.3.5+).** Each profile stores a `credential` reference, resolved at use time:
+
+- `{ "source": "env", "env": "WP_CLIENT_APP_PASSWORD" }` when configured with `application_password_env` (only the variable name is stored), or
+- `{ "source": "keychain", "service": "o-matic.wordpress-connector", "account": "<profile>/<username>@<host>" }` when configured with a raw `application_password` on macOS. The value goes into the login Keychain through `/usr/bin/security add-generic-password -U`, is read back to confirm it, and only then is the reference written.
+
+On hosts other than macOS there is no Keychain: use `application_password_env`. A raw password is refused there rather than written to disk.
+
+Profiles written by 1.3.4 or earlier hold the password in plaintext. On its next load of the file the connector moves each value into the Keychain, confirms it reads back, and rewrites the file atomically (temp file + rename) with the reference. `*_status` and `*_list_profiles` report the migration by profile name and show where each secret lives (env name or Keychain item), never the value. Backup copies you made of an old factory file are not touched; delete them yourself.
 
 When verification is enabled, each profile stores the discovered `restApiRoot`, detected `wordpressVersion` when the site exposes it, and `lastVerifiedAt`. The connector uses that REST root for forwarded MCP calls, so sites without pretty permalinks can use the `?rest_route=/...` form automatically.
 
-Direct `application_password` setup is supported for local emergencies, but hosts may log normal MCP tool arguments. Prefer `application_password_env` for real projects. HTTPS is required except for loopback development hosts such as `localhost` and `127.0.0.1`.
+Direct `application_password` setup is supported (macOS stores it in the Keychain), but hosts may log normal MCP tool arguments, and `security(1)` receives the value as a process argument for the moment it runs. Prefer `application_password_env` for real projects. HTTPS is required except for loopback development hosts such as `localhost` and `127.0.0.1`.
 
 You can bypass stored factory information and configure from environment variables instead:
 

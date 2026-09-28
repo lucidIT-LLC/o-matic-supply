@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.5 — 2026-09-28
+
+### Security
+
+- **The factory file no longer stores the Application Password** (task #1013, finding F15). Before this release `*_factory_configure` wrote the resolved value to `.omatic/<connector>-factory.json` even when given `application_password_env`, which defeated the env indirection and left the secret at rest in the project folder. Each profile now stores a `credential` reference only: the env var name, or on macOS a login-Keychain item (`service` `o-matic.<connector>-connector`, `account` `<profile>/<username>@<host>`), resolved at use time. `refresh_tools` and every other writer go through the same reference-only path.
+- A raw `application_password` is stored in the Keychain via `execFile("/usr/bin/security", ["add-generic-password", "-U", ...])` (no shell), read back to confirm, and only then referenced. Keychain failures are rethrown with the exit status only, because the original error quotes the command line. On non-macOS hosts a raw password is refused with an env-only message.
+- Profiles holding a plaintext `applicationPassword` are migrated on load: value into the Keychain, read back, file rewritten atomically with the reference. Status and list output report which profiles migrated and where each secret lives, never the value.
+- `*_status` reports `credentialError` and `ready: false` when a reference does not resolve (for example, `Keychain item not found: service ..., account ...`).
+
+### Changed
+
+- The project-folder lookup is now `resolveConnectorConfigRoot`, documented as what it is: WordPress/Elementor connector config lookup, not factory identity (finding F14). Behavior is unchanged.
+- `npm run check` runs `scripts/test-credentials.mjs` (mocked `security(1)`; the real Keychain is never touched). The smoke fixture now uses an env credential reference.
+
 ## 1.3.2 — 2026-09-05
 
 ### Fixed
