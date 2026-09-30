@@ -28,20 +28,14 @@ jobs:
         working-directory: wordpress
         run: npm ci --ignore-scripts && node scripts/check-dist-fresh.mjs
 
-      # Rule #350 (decision #587), task #881. Every plugin in this marketplace
-      # is O-Matic-branded by definition and is always gated: a push to `main`
-      # IS the release (this repo has no separate release/publish step -- the
-      # marketplace consumes `main` directly), so the gate runs at that exact
-      # moment, not on a pull_request (no OMATIC_MCP_TOKEN secret reaches a
-      # fork PR, and nothing has shipped yet at that point anyway).
-      - name: Spirit Gate check (rule #350)
-        if: github.event_name != 'pull_request'
-        env:
-          # No default URL in the script (Smith #1013, as phot-o-MATIC P5): the
-          # endpoint is a repository variable, like the token is a secret.
-          OMATIC_MCP_URL: ${{ vars.OMATIC_MCP_URL }}
-          OMATIC_MCP_TOKEN: ${{ secrets.OMATIC_MCP_TOKEN }}
-        run: node scripts/spirit-gate-check.mjs .
+      # Rule #350 Spirit Gate: NOT run in CI, same as the three synced packs
+      # (task #1002). It needs a token for, and a route into, the operator's
+      # private o-MATIC Server, which a GitHub runner has no business reaching
+      # (operator ruling 2026-09-30: nothing we ship looks for a private
+      # server). It ran red on every push from 2026-09-30 and taught everyone
+      # to ignore CI. The live gate is the LOCAL pre-release step:
+      #   OMATIC_MCP_URL=... OMATIC_MCP_TOKEN=... node scripts/spirit-gate-check.mjs .
+      # and its verdict is recorded in factory.spirit_gate_verdicts.
 
       # Blocking on purpose. No continue-on-error, no `|| true`: the placeholder
       # rule in verify-pack.mjs exists because a manifest that fails this check
