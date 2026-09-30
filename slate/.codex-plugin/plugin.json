@@ -1,6 +1,6 @@
 {
   "name": "slate",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Connect Codex to the governed Slate canvas API on the installed O-Matic Server.",
   "author": {
     "name": "o-MATIC AI Research Lab",

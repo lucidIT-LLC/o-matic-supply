@@ -1,6 +1,6 @@
 {
   "name": "team-assistant-mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "license": "BUSL-1.1",
   "description": "Team Assistant — an MCP server giving an AI assistant governed read/write access to a team's work in Microsoft Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Ships the pack build of team-assistant-mcp; see SOURCE.json.",

@@ -1,6 +1,6 @@
 {
   "name": "slate",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "BUSL-1.1",
   "description": "Governed O-Matic Server Slate canvas API connector. It passes only the authenticated host's request to the server; it stores no copy of the bearer token.",
   "author": {
