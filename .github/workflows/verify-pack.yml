@@ -44,3 +44,6 @@ jobs:
       # from the silence it is meant to break.
       - name: Verify MCP host config shapes
         run: node scripts/check-mcp-host-shapes.mjs .
+
+      - name: Catalog versions match each plugin.json
+        run: node scripts/check-catalog-versions.mjs .
