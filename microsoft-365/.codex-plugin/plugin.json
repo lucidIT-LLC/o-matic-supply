@@ -1,9 +1,9 @@
 {
   "name": "microsoft-365",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Team Assistant MCP: an AI-native MCP server giving governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted, per-tenant, delegated sign-in — no central service, no admin-consent-for-others.",
   "author": {
-    "name": "LucidIT, LLC",
+    "name": "o-MATIC AI Research Lab",
     "url": "https://o-matic.ai"
   },
   "homepage": "https://o-matic.ai",
@@ -47,6 +47,8 @@
       "Create a OneNote page with headings, color, and an inline image from this content.",
       "Append this to my meeting notes page in OneNote."
     ],
-    "brandColor": "#00B5AD"
+    "brandColor": "#00B5AD",
+    "logo": "./assets/logo.png",
+    "composerIcon": "./assets/logo.png"
   }
 }

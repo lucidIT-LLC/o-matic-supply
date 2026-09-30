@@ -1,13 +1,13 @@
 {
   "name": "wordpress",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "description": "o-MATIC WordPress Factory connectors: WordPress and Elementor MCP servers for site and content operations. Tools, not people - the agents ship separately in o-MATIC Studio.",
   "author": {
-    "name": "LucidIT, LLC",
+    "name": "o-MATIC AI Research Lab",
     "url": "https://o-matic.ai"
   },
   "homepage": "https://o-matic.ai",
-  "repository": "https://github.com/lucidIT-LLC/o-matic-wordpress-factory",
+  "repository": "https://github.com/lucidIT-LLC/o-matic-supply",
   "license": "BUSL-1.1",
   "keywords": [
     "omatic",
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "o-MATIC Supply — WordPress & Elementor",
     "shortDescription": "Connect Codex to a project's WordPress and Elementor MCP tools.",
-    "longDescription": "Project-local WordPress and Elementor MCP connectors for Codex. Tools, not people: this pack ships the two connector servers and their setup tools only. The agents who use them - Brandy, Carver, Jo, Monet and Pixel - ship separately in o-MATIC Studio, because a plugin declaring an mcpServers block is omitted by hosted-marketplace hosts and bundling them here once cost four agents on restricted hosts.",
+    "longDescription": "Project-local WordPress and Elementor MCP connectors. Configure a site once per project, then work through its WordPress abilities and Elementor page-building tools. Tools, not people: the agents who use them (Brandy, Carver, Jo, Monet and Andy) ship in o-MATIC Studio.",
     "developerName": "o-MATIC AI Research Lab",
     "category": "Productivity",
     "capabilities": [
@@ -40,6 +40,8 @@
       "Activate a stored WordPress or Elementor Factory profile.",
       "List available WordPress and Elementor MCP tools."
     ],
-    "brandColor": "#00B5AD"
+    "brandColor": "#00B5AD",
+    "logo": "./assets/logo.png",
+    "composerIcon": "./assets/logo.png"
   }
 }
