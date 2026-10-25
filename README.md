@@ -51,6 +51,11 @@ these connectors are what they reach for.
 /plugin install wordpress@o-matic-supply
 ```
 
+**Cursor 4.7:** add `lucidIT-LLC/o-matic-supply` as a plugin marketplace, then
+install `wordpress` and/or `microsoft-365`. Each plugin ships `.cursor-plugin/`
+plus `mcp.json` (MCP required). Method cards: `wordpress/adapters/cursor/`,
+`microsoft-365/adapters/cursor/`. Pack release tag: `supply--v1.4.0`.
+
 Configure the connection with `wordpress_factory_configure` before use, and read
 `wordpress_factory_usage_guide` for the current capability summary. Forwarded
 upstream tools are namespaced `wp__` and `elementor__`; never call unprefixed

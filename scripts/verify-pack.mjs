@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // verify-pack.mjs — does a skill pack actually work on a host with no MCP plugin?
-// Version: 1.3.0 (2026-09-26) — adds check 2c, .claude-plugin/.codex-plugin version parity (task #803).
+// Version: 1.4.0 (2026-10-25) — adds Cursor .cursor-plugin version parity + mcp.json scan (Supply Cursor host).
 // Exit 1 on any FAIL. Every rule here encodes a failure this factory has already had.
 import { readFileSync, readdirSync, existsSync, statSync, lstatSync } from "node:fs";
 import { join, basename } from "node:path";
@@ -87,6 +87,25 @@ for (const d of readdirSync(root)) {
       else OK(`${d}: .claude-plugin and .codex-plugin versions match (${pj.version})`);
     }
   }
+
+  // Cursor 4.7 host plugin (Supply 1.4.0+). Optional: packs without .cursor-plugin skip.
+  // Tool packs MUST keep shipping MCP (mcpServers path or mcp.json). Skill packs
+  // (Agency/Firm/Studio) forbid mcpServers in .cursor-plugin; Supply is the opposite.
+  const cursorCp = join(pd, ".cursor-plugin", "plugin.json");
+  if (existsSync(cursorCp)) {
+    let uj; try { uj = JSON.parse(readFileSync(cursorCp, "utf8")); }
+    catch (e) { FAIL(`${d}/.cursor-plugin/plugin.json invalid: ${e.message}`); uj = null; }
+    if (uj) {
+      if (uj.version !== pj.version)
+        FAIL(`${d}: version drift -- .claude-plugin/plugin.json is ${pj.version}, .cursor-plugin/plugin.json is ${uj.version}`);
+      else OK(`${d}: .claude-plugin and .cursor-plugin versions match (${pj.version})`);
+      const cursorMcp = Boolean(uj.mcpServers) || existsSync(join(pd, "mcp.json"));
+      if (isToolPack) {
+        if (cursorMcp) OK(`${d}: Cursor tool pack ships MCP (mcpServers/mcp.json)`);
+        else FAIL(`${d}: .cursor-plugin present on a tool pack but no mcpServers/mcp.json`);
+      }
+    }
+  }
 }
 
 // 2b. compatibility tier must be declared — known_rules #284 is halt-grade
@@ -119,9 +138,19 @@ for (const d of readdirSync(root)) {
 // .claude-plugin/plugin.json; checking only .mcp.json is how the previous pass
 // reached the wrong cause for the microsoft-365 crash.
 {
-  const BUILTINS = new Set(["CLAUDE_PLUGIN_ROOT", "CLAUDE_PLUGIN_DATA", "CLAUDE_PROJECT_DIR"]);
+  const CLAUDE_BUILTINS = new Set(["CLAUDE_PLUGIN_ROOT", "CLAUDE_PLUGIN_DATA", "CLAUDE_PROJECT_DIR"]);
+  // Cursor docs (cursor.com/docs/reference/plugins): mcp.json uses ${PLUGIN_ROOT}
+  // (and may use cwd). Distinct from Claude's CLAUDE_PLUGIN_* set.
+  const CURSOR_BUILTINS = new Set(["PLUGIN_ROOT", "PLUGIN_DATA"]);
   const SUBST_FIELDS = {
     stdio: new Set(["command", "args", "env"]),
+    http: new Set(["url", "headers", "headersHelper"]),
+    sse: new Set(["url", "headers", "headersHelper"]),
+    ws: new Set(["url", "headers", "headersHelper"]),
+  };
+  // Cursor stdio examples put ${PLUGIN_ROOT} in cwd — allow cwd only for cursor manifests.
+  const CURSOR_SUBST_FIELDS = {
+    stdio: new Set(["command", "args", "env", "cwd"]),
     http: new Set(["url", "headers", "headersHelper"]),
     sse: new Set(["url", "headers", "headersHelper"]),
     ws: new Set(["url", "headers", "headersHelper"]),
@@ -137,29 +166,29 @@ for (const d of readdirSync(root)) {
 
   const TOKEN = /\$\{([^}]*)\}/g;
   // Walk a server object, remembering which top-level field we are inside.
-  const scanValue = (val, field, ctx, transport) => {
+  const scanValue = (val, field, ctx, transport, { builtins, substFields }) => {
     if (typeof val === "string") {
       for (const m of val.matchAll(TOKEN)) {
         const v = m[1];
-        const substitutes = (SUBST_FIELDS[transport] ?? SUBST_FIELDS.stdio).has(field);
+        const substitutes = (substFields[transport] ?? substFields.stdio).has(field);
         if (!substitutes) {
           FAIL(`${ctx}: \${${v}} sits in "${field}", which the vendor doc does not list as a substituted field for a ${transport} server — it will be passed through as the literal text "\${${v}}"`);
-        } else if (BUILTINS.has(v)) {
+        } else if (builtins.has(v)) {
           OK(`${ctx}: \${${v}} in "${field}"`);
         } else if (allowed(ctx.split("/")[0], v)) {
           OK(`${ctx}: \${${v}} in "${field}" — allowlisted with a recorded reason`);
         } else {
-          FAIL(`${ctx}: \${${v}} in "${field}" is not one of the three documented built-ins and is not in scripts/placeholder-allowlist.json. If the variable is unset the host substitutes NOTHING and the server receives the literal string "\${${v}}" (this crashed microsoft-365, measured 2026-09-13). Fix the spelling, drop it, or allowlist it with a reason.`);
+          FAIL(`${ctx}: \${${v}} in "${field}" is not a documented host built-in and is not in scripts/placeholder-allowlist.json. If the variable is unset the host substitutes NOTHING and the server receives the literal string "\${${v}}" (this crashed microsoft-365, measured 2026-09-13). Fix the spelling, drop it, or allowlist it with a reason.`);
         }
       }
       return;
     }
-    if (Array.isArray(val)) return val.forEach(x => scanValue(x, field, ctx, transport));
+    if (Array.isArray(val)) return val.forEach(x => scanValue(x, field, ctx, transport, { builtins, substFields }));
     if (val && typeof val === "object")
-      for (const [, x] of Object.entries(val)) scanValue(x, field, ctx, transport);
+      for (const [, x] of Object.entries(val)) scanValue(x, field, ctx, transport, { builtins, substFields });
   };
 
-  const scanManifest = (file, rel, getServers) => {
+  const scanManifest = (file, rel, getServers, opts) => {
     let j; try { j = JSON.parse(readFileSync(file, "utf8")); }
     catch { return; }                       // parse errors already reported above
     const map = getServers(j);
@@ -169,7 +198,7 @@ for (const d of readdirSync(root)) {
       checks++;
       const transport = srv.type ?? (srv.url || srv.httpUrl ? "http" : "stdio");
       for (const [field, val] of Object.entries(srv))
-        scanValue(val, field, `${rel}[${name}]`, transport);
+        scanValue(val, field, `${rel}[${name}]`, transport, opts);
     }
   };
 
@@ -177,9 +206,18 @@ for (const d of readdirSync(root)) {
     const pd = join(root, d);
     if (!statSync(pd).isDirectory() || d.startsWith(".")) continue;
     const mcp = join(pd, ".mcp.json");
+    const cursorMcp = join(pd, "mcp.json");
     const pj  = join(pd, ".claude-plugin", "plugin.json");
-    if (existsSync(mcp)) scanManifest(mcp, `${d}/.mcp.json`, j => j.mcpServers ?? j.servers ?? j);
-    if (existsSync(pj))  scanManifest(pj,  `${d}/.claude-plugin/plugin.json`, j => j.mcpServers);
+    if (existsSync(mcp)) scanManifest(mcp, `${d}/.mcp.json`, j => j.mcpServers ?? j.servers ?? j, {
+      builtins: CLAUDE_BUILTINS, substFields: SUBST_FIELDS,
+    });
+    if (existsSync(pj))  scanManifest(pj,  `${d}/.claude-plugin/plugin.json`, j => j.mcpServers, {
+      builtins: CLAUDE_BUILTINS, substFields: SUBST_FIELDS,
+    });
+    if (existsSync(cursorMcp)) scanManifest(cursorMcp, `${d}/mcp.json`, j => j.mcpServers ?? j.servers ?? j, {
+      builtins: new Set([...CLAUDE_BUILTINS, ...CURSOR_BUILTINS]),
+      substFields: CURSOR_SUBST_FIELDS,
+    });
   }
 }
 
