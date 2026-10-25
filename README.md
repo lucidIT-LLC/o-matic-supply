@@ -51,10 +51,7 @@ these connectors are what they reach for.
 /plugin install wordpress@o-matic-supply
 ```
 
-**Cursor 4.7:** add `lucidIT-LLC/o-matic-supply` as a plugin marketplace, then
-install `wordpress` and/or `microsoft-365`. Each plugin ships `.cursor-plugin/`
-plus `mcp.json` (MCP required). Method cards: `wordpress/adapters/cursor/`,
-`microsoft-365/adapters/cursor/`. Pack release tag: `supply--v1.4.0`.
+**Cursor Teams and Enterprise:** a team admin can import `lucidIT-LLC/o-matic-supply` as a team marketplace from **Dashboard → Plugins & MCPs → Team Marketplaces → Add Marketplace → Import from Repo**, then install `wordpress` and/or `microsoft-365` in Cursor Customize. Each plugin ships `.cursor-plugin/` plus `mcp.json` (MCP required). Method cards: `wordpress/adapters/cursor/`, `microsoft-365/adapters/cursor/`. Pack release tag: `supply--v1.4.0`. We have not verified an o-MATIC listing in Cursor's public Marketplace or a fresh install. See [Cursor's plugin guide](https://prod.cursor.com/docs/plugins) and [Marketplace submission page](https://cursor.com/marketplace/publish).
 
 Configure the connection with `wordpress_factory_configure` before use, and read
 `wordpress_factory_usage_guide` for the current capability summary. Forwarded
