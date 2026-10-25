@@ -13,6 +13,7 @@ Adapters:
 
 - `codex/` explains Codex plugin and MCP loading.
 - `claude/` explains Claude Code plugin loading.
+- `cursor/` explains Cursor 4.7 plugin + MCP loading (method cards for WordPress and Elementor connectors — tools, not people).
 - `cowork/` explains desktop MCP configuration.
 - `google/` explains Gemini / Google AI Studio prompt-only use.
 - `ollama/` explains Modelfile prompt-only use.

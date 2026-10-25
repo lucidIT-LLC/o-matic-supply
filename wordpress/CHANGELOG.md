@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 — 2026-10-25
+
+### Added
+
+- **Cursor 4.7 host packaging.** `.cursor-plugin/plugin.json` (version-aligned with Claude/Codex), root marketplace `.cursor-plugin/marketplace.json`, and Cursor `mcp.json` launching both WordPress and Elementor connectors via the existing GUI-safe launcher.
+- `adapters/cursor/` method cards for the connectors (INSTALL + `wordpress.md` + `elementor.md`) — tools, not people; Studio specialists remain in o-MATIC Studio.
+- Verify/catalog checks cover Cursor plugin version parity and Cursor `mcp.json` shape (`PLUGIN_ROOT` cwd).
+
+### Notes
+
+- Claude and Codex packaging unchanged in behavior; Cursor surface is additive.
+- Pack release tag: `supply--v1.4.0` (microsoft-365 ships `0.3.0` in the same release).
+
 ## 1.3.7 — 2026-09-28
 
 ### Fixed

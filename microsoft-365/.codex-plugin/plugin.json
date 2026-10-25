@@ -1,7 +1,7 @@
 {
   "name": "microsoft-365",
-  "version": "0.2.2",
-  "description": "Team Assistant MCP: an AI-native MCP server giving governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted, per-tenant, delegated sign-in — no central service, no admin-consent-for-others.",
+  "version": "0.3.0",
+  "description": "Team Assistant MCP: an AI-native MCP server giving governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted, per-tenant, delegated sign-in \u2014 no central service, no admin-consent-for-others.",
   "author": {
     "name": "o-MATIC AI Research Lab",
     "url": "https://o-matic.ai"
@@ -22,9 +22,9 @@
   ],
   "mcpServers": "./.mcp.json",
   "interface": {
-    "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)",
+    "displayName": "o-MATIC Supply \u2014 Team Assistant (Microsoft 365)",
     "shortDescription": "Give Codex governed access to Planner, Teams, SharePoint and OneNote over Microsoft Graph.",
-    "longDescription": "An MCP server for everyday Microsoft 365 work: Planner (task and goal management, OKR-style — start from a goal, build the tasks that serve it), Teams (read), SharePoint Lists (read/write by internal column name), and OneNote (rich HTML pages with color, styling, inline images and attachments, not flat text). Self-hosted per tenant with delegated device-code sign-in — every call acts as the signed-in user, nothing is proxied through a shared service. Deliberately excludes Premium Planner / Dataverse (\"Project\"), which is a separate plugin.",
+    "longDescription": "An MCP server for everyday Microsoft 365 work: Planner (task and goal management, OKR-style \u2014 start from a goal, build the tasks that serve it), Teams (read), SharePoint Lists (read/write by internal column name), and OneNote (rich HTML pages with color, styling, inline images and attachments, not flat text). Self-hosted per tenant with delegated device-code sign-in \u2014 every call acts as the signed-in user, nothing is proxied through a shared service. Deliberately excludes Premium Planner / Dataverse (\"Project\"), which is a separate plugin.",
     "developerName": "o-MATIC AI Research Lab",
     "category": "Productivity",
     "capabilities": [

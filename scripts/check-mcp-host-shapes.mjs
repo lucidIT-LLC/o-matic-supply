@@ -82,8 +82,43 @@ export function checkVscode(path, label) {
   record(label, true, `${entries.length} server(s), all typed`);
 }
 
+// --- Cursor 4.7: mcp.json under plugin root with top-level mcpServers --------
+// cursor.com/docs/reference/plugins — Cursor discovers mcp.json; plugin.json
+// may set mcpServers to a path. cwd may carry ${PLUGIN_ROOT}.
+export function checkCursorMcp(path, label) {
+  const f = readJson(path);
+  if (!('mcpServers' in f)) return record(label, false, 'missing top-level "mcpServers"');
+  const entries = servers(f.mcpServers);
+  if (!entries.length) return record(label, false, 'declares no servers');
+  const bad = entries.filter(([, v]) => !isServer(v)).map(([k]) => k);
+  if (bad.length) return record(label, false, `no transport (command/url/httpUrl): ${bad.join(', ')}`);
+  record(label, true, `${entries.length} server(s)`);
+}
+
+export function checkCursorPlugin(manifestPath) {
+  const label = `cursor ${manifestPath.replace(ROOT + '/', '')}`;
+  const m = readJson(manifestPath);
+  if (typeof m.mcpServers === 'string') {
+    const pluginRoot = resolve(dirname(manifestPath), '..');
+    const target = [resolve(pluginRoot, m.mcpServers), resolve(dirname(manifestPath), m.mcpServers)]
+      .find(existsSync);
+    if (!target) return record(label, false, `referenced file missing: ${m.mcpServers}`);
+    return checkCursorMcp(target, label);
+  }
+  if (m.mcpServers && typeof m.mcpServers === 'object') {
+    const entries = servers(m.mcpServers);
+    if (!entries.length) return record(label, false, 'inline mcpServers declares no servers');
+    return record(label, true, `${entries.length} inline server(s)`);
+  }
+  // Default discovery: sibling mcp.json at plugin root
+  const pluginRoot = resolve(dirname(manifestPath), '..');
+  const fallback = resolve(pluginRoot, 'mcp.json');
+  if (existsSync(fallback)) return checkCursorMcp(fallback, `${label} (mcp.json discovery)`);
+  return record(label, false, 'no mcpServers field and no mcp.json at plugin root');
+}
+
 // --- agent-pack.json must not call a native-MCP host prompt-only -------------
-const NATIVE_MCP = ['google-gemini', 'google-gemini-cli', 'gemini', 'github-copilot', 'github-copilot-vscode', 'copilot'];
+const NATIVE_MCP = ['google-gemini', 'google-gemini-cli', 'gemini', 'github-copilot', 'github-copilot-vscode', 'copilot', 'cursor'];
 export function checkAgentPack(path, label) {
   const f = readJson(path);
   const promptOnly = f?.compatibility?.prompt_only_hosts?.hosts ?? [];
@@ -99,11 +134,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const d = resolve(ROOT, pack);
     if (!existsSync(d)) continue;
     if (existsSync(`${d}/.codex-plugin/plugin.json`)) checkCodex(`${d}/.codex-plugin/plugin.json`);
+    if (existsSync(`${d}/.cursor-plugin/plugin.json`)) checkCursorPlugin(`${d}/.cursor-plugin/plugin.json`);
     for (const [file, fn] of [
       ['config/examples/claude-code.mcp.json', checkMcpServersMap],
       ['config/examples/generic-mcp.json', checkMcpServersMap],
       ['config/examples/gemini-cli.settings.json', checkMcpServersMap],
       ['config/examples/vscode.mcp.json', checkVscode],
+      ['mcp.json', checkCursorMcp],
       ['agent-pack.json', checkAgentPack],
     ]) if (existsSync(`${d}/${file}`)) fn(`${d}/${file}`, `${pack}/${file}`);
   }
