@@ -22,5 +22,18 @@
     "tools",
     "cursor"
   ],
-  "mcpServers": "./mcp.json"
+  "mcpServers": "./mcp.json",
+  "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)",
+  "logo": "assets/logo.png",
+  "category": "productivity",
+  "tags": [
+    "o-matic",
+    "microsoft-365",
+    "planner",
+    "teams",
+    "sharepoint",
+    "onenote",
+    "mcp",
+    "connector"
+  ]
 }

@@ -12,13 +12,19 @@
       "name": "wordpress",
       "source": "./wordpress",
       "description": "o-MATIC Supply — WordPress and Elementor MCP connectors. Tools, not people.",
-      "version": "1.4.0"
+      "version": "1.4.0",
+      "displayName": "o-MATIC Supply — WordPress & Elementor",
+      "logo": "wordpress/assets/logo.png",
+      "category": "productivity"
     },
     {
       "name": "microsoft-365",
       "source": "./microsoft-365",
       "description": "o-MATIC Supply — Team Assistant (Microsoft 365) MCP connector. Tools, not people.",
-      "version": "0.3.0"
+      "version": "0.3.0",
+      "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)",
+      "logo": "microsoft-365/assets/logo.png",
+      "category": "productivity"
     }
   ]
 }

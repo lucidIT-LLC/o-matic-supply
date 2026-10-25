@@ -18,5 +18,15 @@
     "tools",
     "cursor"
   ],
-  "mcpServers": "./mcp.json"
+  "mcpServers": "./mcp.json",
+  "displayName": "o-MATIC Supply — WordPress & Elementor",
+  "logo": "assets/logo.png",
+  "category": "productivity",
+  "tags": [
+    "o-matic",
+    "wordpress",
+    "elementor",
+    "mcp",
+    "connector"
+  ]
 }
