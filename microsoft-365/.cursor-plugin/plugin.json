@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "description": "Team Assistant MCP: an AI-native MCP server giving governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted, per-tenant, delegated sign-in — no central service, no admin-consent-for-others.",
   "author": {
-    "name": "o-MATIC AI Research Lab",
+    "name": "LucidIT, LLC",
     "url": "https://o-matic.ai"
   },
   "homepage": "https://o-matic.ai",
@@ -22,5 +22,18 @@
     "tools",
     "cursor"
   ],
-  "mcpServers": "./mcp.json"
+  "mcpServers": "./mcp.json",
+  "displayName": "o-MATIC Supply — Team Assistant (Microsoft 365)",
+  "logo": "assets/logo.png",
+  "category": "productivity",
+  "tags": [
+    "o-matic",
+    "microsoft-365",
+    "planner",
+    "teams",
+    "sharepoint",
+    "onenote",
+    "mcp",
+    "connector"
+  ]
 }
