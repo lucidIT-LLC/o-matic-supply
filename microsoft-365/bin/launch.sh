@@ -11,8 +11,13 @@
 # it too.
 #
 # Usage from a manifest:
-#   "command": "/bin/sh"
-#   "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.sh"]
+#   Claude (.mcp.json):
+#     "command": "/bin/sh"
+#     "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.sh"]
+#   Cursor (mcp.json) — Cursor expands CURSOR_PLUGIN_ROOT / CLAUDE_PLUGIN_ROOT,
+#   NOT Agent Plugins ${PLUGIN_ROOT} (literal cwd -> spawn ENOENT):
+#     "command": "${CURSOR_PLUGIN_ROOT}/bin/launch.sh"
+#     "cwd": "${CURSOR_PLUGIN_ROOT}"
 
 set -u
 

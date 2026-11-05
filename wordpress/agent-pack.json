@@ -1,7 +1,7 @@
 {
   "schema": "lucidit-agent-pack-v1",
   "name": "o-matic-wordpress-factory",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "display_name": "o-MATIC WordPress Factory",
   "release": {
     "channel": "stable",
@@ -42,7 +42,7 @@
         "google-gemini-cli",
         "github-copilot-vscode"
       ],
-      "notes": "Full operation requires an MCP-capable host that can launch the WordPress and Elementor connector servers and provide project credentials or profile config. Host config shapes differ and are NOT interchangeable: Claude Code / Cowork / Gemini CLI use an mcpServers map; Codex uses mcp_servers (TOML) or a bare server map in the file .codex-plugin/plugin.json's mcpServers field points at; Cursor 4.7 uses .cursor-plugin + mcp.json (mcpServers map, cwd ${PLUGIN_ROOT}); VS Code Copilot uses a servers map with an explicit per-server type. See config/examples/ and adapters/cursor/."
+      "notes": "Full operation requires an MCP-capable host that can launch the WordPress and Elementor connector servers and provide project credentials or profile config. Host config shapes differ and are NOT interchangeable: Claude Code / Cowork / Gemini CLI use an mcpServers map; Codex uses mcp_servers (TOML) or a bare server map in the file .codex-plugin/plugin.json's mcpServers field points at; Cursor 4.7 uses .cursor-plugin + mcp.json (mcpServers map, cwd ${CURSOR_PLUGIN_ROOT}); VS Code Copilot uses a servers map with an explicit per-server type. See config/examples/ and adapters/cursor/."
     },
     "prompt_only_hosts": {
       "status": "limited",
@@ -69,7 +69,7 @@
       "plugin_manifest": ".cursor-plugin/plugin.json",
       "marketplace": ".cursor-plugin/marketplace.json",
       "mcp_manifest": "mcp.json",
-      "notes": "Cursor 4.7 plugin manifest points mcpServers at mcp.json. Method cards live under adapters/cursor/ (connectors — tools, not people)."
+      "notes": "Cursor 4.7 plugin manifest points mcpServers at mcp.json. Method cards live under adapters/cursor/ (connectors \u2014 tools, not people)."
     },
     "cowork": {
       "type": "mcp_desktop_config",
