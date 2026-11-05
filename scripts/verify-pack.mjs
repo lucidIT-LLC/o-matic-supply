@@ -139,16 +139,18 @@ for (const d of readdirSync(root)) {
 // reached the wrong cause for the microsoft-365 crash.
 {
   const CLAUDE_BUILTINS = new Set(["CLAUDE_PLUGIN_ROOT", "CLAUDE_PLUGIN_DATA", "CLAUDE_PROJECT_DIR"]);
-  // Cursor docs (cursor.com/docs/reference/plugins): mcp.json uses ${PLUGIN_ROOT}
-  // (and may use cwd). Distinct from Claude's CLAUDE_PLUGIN_* set.
-  const CURSOR_BUILTINS = new Set(["PLUGIN_ROOT", "PLUGIN_DATA"]);
+  // Cursor docs (cursor.com/docs/reference/plugins, measured 2026-11-05):
+  // expands ${CURSOR_PLUGIN_ROOT} and ${CLAUDE_PLUGIN_ROOT} in command/args/env/cwd.
+  // Does NOT expand Agent Plugins ${PLUGIN_ROOT}/${PLUGIN_DATA} — literal cwd
+  // makes Node spawn report "spawn /bin/sh ENOENT" (reproduced on Mac Studio).
+  const CURSOR_BUILTINS = new Set(["CURSOR_PLUGIN_ROOT", "CLAUDE_PLUGIN_ROOT"]);
   const SUBST_FIELDS = {
     stdio: new Set(["command", "args", "env"]),
     http: new Set(["url", "headers", "headersHelper"]),
     sse: new Set(["url", "headers", "headersHelper"]),
     ws: new Set(["url", "headers", "headersHelper"]),
   };
-  // Cursor stdio examples put ${PLUGIN_ROOT} in cwd — allow cwd only for cursor manifests.
+  // Cursor stdio examples put ${CURSOR_PLUGIN_ROOT} in cwd — allow cwd only for cursor manifests.
   const CURSOR_SUBST_FIELDS = {
     stdio: new Set(["command", "args", "env", "cwd"]),
     http: new Set(["url", "headers", "headersHelper"]),

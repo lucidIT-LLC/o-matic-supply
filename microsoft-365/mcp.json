@@ -1,11 +1,8 @@
 {
   "mcpServers": {
     "team-assistant": {
-      "command": "/bin/sh",
-      "args": [
-        "./bin/launch.sh"
-      ],
-      "cwd": "${PLUGIN_ROOT}"
+      "command": "${CURSOR_PLUGIN_ROOT}/bin/launch.sh",
+      "cwd": "${CURSOR_PLUGIN_ROOT}"
     }
   }
 }

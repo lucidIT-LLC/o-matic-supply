@@ -1,13 +1,12 @@
 {
   "mcpServers": {
     "o-matic-wordpress-connector": {
-      "command": "/bin/sh",
+      "command": "${CURSOR_PLUGIN_ROOT}/bin/omatic-wp-launch.sh",
       "args": [
-        "./bin/omatic-wp-launch.sh",
         "dist/index.mjs",
         "wordpress"
       ],
-      "cwd": "${PLUGIN_ROOT}",
+      "cwd": "${CURSOR_PLUGIN_ROOT}",
       "env": {
         "OMATIC_WORDPRESS_FACTORY_CONFIG": "${OMATIC_WORDPRESS_FACTORY_CONFIG}",
         "OMATIC_WORDPRESS_FACTORY_PROFILE": "${OMATIC_WORDPRESS_FACTORY_PROFILE}",
@@ -23,13 +22,12 @@
       }
     },
     "o-matic-elementor-connector": {
-      "command": "/bin/sh",
+      "command": "${CURSOR_PLUGIN_ROOT}/bin/omatic-wp-launch.sh",
       "args": [
-        "./bin/omatic-wp-launch.sh",
         "dist/elementor.mjs",
         "elementor"
       ],
-      "cwd": "${PLUGIN_ROOT}",
+      "cwd": "${CURSOR_PLUGIN_ROOT}",
       "env": {
         "OMATIC_ELEMENTOR_FACTORY_CONFIG": "${OMATIC_ELEMENTOR_FACTORY_CONFIG}",
         "OMATIC_ELEMENTOR_FACTORY_PROFILE": "${OMATIC_ELEMENTOR_FACTORY_PROFILE}",

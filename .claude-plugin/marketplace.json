@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "o-MATIC Supply \u2014 tools, not people. Governed MCP connectors for WordPress, Microsoft 365, and the O-Matic Server Slate canvas API. Ships MCP servers by design; it is equipment, not staff.",
-    "version": "2026-10-25"
+    "version": "2026-11-05"
   },
   "plugins": [
     {
       "name": "wordpress",
       "displayName": "o-MATIC Supply \u2014 WordPress & Elementor",
       "source": "./wordpress",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "description": "o-MATIC Supply \u2014 tools, not people. The WordPress and Elementor MCP connectors: site and content operations, Elementor page building, template and theme work, media, and a sandboxed export/import path. Ships MCP servers by design; it is equipment, not staff.",
       "author": {
         "name": "LucidIT, LLC",
@@ -42,7 +42,7 @@
       "name": "microsoft-365",
       "displayName": "o-MATIC Supply \u2014 Team Assistant (Microsoft 365)",
       "source": "./microsoft-365",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "description": "Team Assistant MCP: governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted per tenant with delegated device-code sign-in \u2014 no central service, no admin-consent-for-others. Premium Planner / Dataverse (\"Project\") is deliberately out of scope, a separate plugin.",
       "author": {
         "name": "LucidIT, LLC",

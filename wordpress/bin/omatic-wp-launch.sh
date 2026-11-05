@@ -10,8 +10,14 @@
 # (KB-0418 defect A, KB-0417).
 #
 # Usage from a manifest:
-#   "command": "/bin/sh"
-#   "args": ["${CLAUDE_PLUGIN_ROOT}/bin/omatic-wp-launch.sh", "server/index.mjs", "wordpress"]
+#   Claude (.mcp.json):
+#     "command": "/bin/sh"
+#     "args": ["${CLAUDE_PLUGIN_ROOT}/bin/omatic-wp-launch.sh", "dist/index.mjs", "wordpress"]
+#   Cursor (mcp.json) — Cursor expands CURSOR_PLUGIN_ROOT / CLAUDE_PLUGIN_ROOT,
+#   NOT Agent Plugins ${PLUGIN_ROOT} (literal cwd -> spawn ENOENT):
+#     "command": "${CURSOR_PLUGIN_ROOT}/bin/omatic-wp-launch.sh"
+#     "args": ["dist/index.mjs", "wordpress"]
+#     "cwd": "${CURSOR_PLUGIN_ROOT}"
 #
 # $1 = server entry, relative to the plugin root
 # $2 = connector label, used only in the advisory message

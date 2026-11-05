@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 — 2026-11-05
+
+### Fixed
+
+- **Cursor MCP spawn `ENOENT`.** Same root as wordpress 1.4.1: `${PLUGIN_ROOT}` cwd was not expanded by Cursor, so `command: "/bin/sh"` failed with `spawn /bin/sh ENOENT`. `mcp.json` now uses `${CURSOR_PLUGIN_ROOT}/bin/launch.sh` with `cwd: "${CURSOR_PLUGIN_ROOT}"`.
+
+
 ## 0.3.0 — 2026-10-25
 
 ### Added

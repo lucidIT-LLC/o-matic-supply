@@ -13,6 +13,10 @@ Supply is **tools, not people**. This plugin ships the Team Assistant MCP connec
 
 The method card repeats: discover tools live, never invent Claude tool names, fan-out ≤3 specialists, `startup` + `conversation_key` when o-MATIC Server MCP is present, GrokBot undefined.
 
+## MCP launch (Cursor)
+
+Cursor expands `${CURSOR_PLUGIN_ROOT}` and `${CLAUDE_PLUGIN_ROOT}` in `mcp.json` (`command`, `args`, `env`, `cwd`). It does **not** expand Agent Plugins `${PLUGIN_ROOT}` — a literal cwd makes the host report `spawn … ENOENT`. This pack's Cursor `mcp.json` uses `${CURSOR_PLUGIN_ROOT}` and runs `bin/*-launch.sh` directly (GUI-safe Node resolution).
+
 ## Compatibility
 
 **MCP-host full operation only** (rule #284). Premium Planner / Dataverse ("Project") is deliberately out of scope — a separate plugin.
