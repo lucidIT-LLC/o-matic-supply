@@ -3,7 +3,7 @@
   "version": "0.1.4",
   "private": true,
   "license": "BUSL-1.1",
-  "description": "o-MATIC Server — Microsoft 365 Copilot MCP connector package (plugin/MCP-only, Entra SSO). Not a declarative agent. Not Probot.",
+  "description": "o-MATIC Server — Microsoft 365 Copilot MCP connector (agentConnectors remote MCP, Entra SSO). Not an agent, not a persona, not Probot. Microsoft admin UI still labels the zip a plugin.",
   "type": "module",
   "scripts": {
     "render-icons": "node scripts/render-icons.mjs",

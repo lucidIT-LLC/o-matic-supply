@@ -19,7 +19,7 @@
   },
   "description": {
     "short": "o-MATIC Server in Copilot via Entra SSO MCP.",
-    "full": "o-MATIC Server MCP connector for Microsoft 365 Copilot. Entra SSO against https://factory.o-matic.ai/mcp with eight pinned read-only tools. Plugin/MCP connection only — not a declarative agent."
+    "full": "o-MATIC Server MCP connector for Microsoft 365 Copilot. Entra SSO against https://factory.o-matic.ai/mcp with eight pinned read-only tools. Connector only — not a declarative agent, not a persona."
   },
   "accentColor": "#00B5AD",
   "permissions": [

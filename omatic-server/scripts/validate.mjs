@@ -164,14 +164,16 @@ async function main() {
   const mcpTools = loadJson(MCP_TOOLS);
 
   // --- structural: no declarative agent ---
-  if (manifest.copilotAgents) FAIL("manifest must not declare copilotAgents (plugin/MCP-only)");
+  if (manifest.copilotAgents) FAIL("manifest must not declare copilotAgents (connector only)");
   else OK("no copilotAgents / declarative agent");
+  if (manifest.agentSkills) FAIL("manifest must not declare agentSkills (connector only)");
+  else OK("no agentSkills");
   if (existsSync(join(pkg, "declarativeAgent.json"))) FAIL("declarativeAgent.json must not exist");
   else OK("no declarativeAgent.json");
   if (existsSync(join(pkg, "instructions.txt"))) FAIL("instructions.txt must not exist");
   else OK("no instructions.txt");
 
-  // --- agentConnectors remote MCP ---
+  // --- agentConnectors remote MCP (portable across Copilot hosts) ---
   const connectors = manifest.agentConnectors;
   if (!Array.isArray(connectors) || connectors.length !== 1) {
     FAIL("manifest.agentConnectors must have exactly one entry");
@@ -179,22 +181,37 @@ async function main() {
     const c = connectors[0];
     if (c.id !== "omaticserver") FAIL(`connector id must be omaticserver, got ${c.id}`);
     else OK("connector id omaticserver");
+    if (!c.displayName || !c.description) FAIL("connector displayName and description required");
+    else OK("connector displayName + description");
     const remote = c.toolSource?.remoteMcpServer;
-    if (!remote) FAIL("toolSource.remoteMcpServer required");
+    if (!remote) FAIL("toolSource.remoteMcpServer required (connector registration)");
     else {
+      if (c.toolSource.plugin || c.toolSource.localMcpServer) {
+        FAIL("toolSource must be remoteMcpServer only (one source)");
+      } else OK("toolSource is remoteMcpServer only");
       if (remote.mcpServerUrl !== "https://factory.o-matic.ai/mcp") {
         FAIL(`mcpServerUrl must be https://factory.o-matic.ai/mcp, got ${remote.mcpServerUrl}`);
+      } else if (!/^https:\/\//i.test(remote.mcpServerUrl)) {
+        FAIL("mcpServerUrl must be HTTPS");
       } else OK("mcpServerUrl https://factory.o-matic.ai/mcp");
-      if (remote.authorization?.type !== "OAuthPluginVault") FAIL("authorization.type must be OAuthPluginVault");
-      else OK("OAuthPluginVault");
+      // Copilot Chat rejects missing OAuth; Cowork-only None is a portability trap.
+      if (!remote.authorization) FAIL("authorization required (Copilot Chat needs OAuthPluginVault)");
+      else if (remote.authorization.type === "None") {
+        FAIL("authorization.type None is Cowork-only; use OAuthPluginVault for portable hosts");
+      } else if (remote.authorization.type !== "OAuthPluginVault") {
+        FAIL("authorization.type must be OAuthPluginVault");
+      } else OK("OAuthPluginVault (portable: Copilot Chat + Cowork)");
       const expectedRef =
         "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE=";
       if (remote.authorization?.referenceId !== expectedRef) {
         FAIL("authorization.referenceId is not byte-identical to the Entra SSO registration id");
       } else OK("referenceId byte-identical to hand-built reference_id");
-      if (remote.mcpToolDescription?.file !== "mcp-tools.json") {
+      // Cowork still requires mcpToolDescription even on manifest 1.29+.
+      if (!remote.mcpToolDescription?.file) {
+        FAIL("mcpToolDescription.file required for Cowork + pinned tool surface");
+      } else if (remote.mcpToolDescription.file !== "mcp-tools.json") {
         FAIL("mcpToolDescription.file must be mcp-tools.json");
-      } else OK("mcpToolDescription.file mcp-tools.json");
+      } else OK("mcpToolDescription.file mcp-tools.json (Cowork + pinned tools)");
     }
   }
 

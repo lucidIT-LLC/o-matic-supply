@@ -1,8 +1,23 @@
 # o-MATIC Server Copilot MCP package — structure citations
 
-This package is a **plugin / MCP connector**, not a declarative agent.
+**o-MATIC name: connector.** Microsoft admin UI / upload docs still say
+“plugin,” and the app-manifest array is still `agentConnectors` (Microsoft:
+that schema id stays even though the installable package is called a plugin).
+This package is a **remote MCP connector**, not a declarative agent.
 No `copilotAgents`, no `declarativeAgent.json`, no `instructions.txt`, no
 conversation starters, no persona.
+
+## Portability (works across supported Copilot hosts)
+
+Not a Cowork-only package:
+
+- `OAuthPluginVault` — Copilot Chat requires OAuth; `None` works in Cowork only
+  and is refused by our validator
+- Packaged `mcpToolDescription` — Cowork still requires the file on 1.29+;
+  pinning also keeps the eight read-only tools identical everywhere
+- Connector-only (`agentConnectors`, no `copilotAgents`, no `agentSkills`) — any
+  host that can use a governed connector can attach it; it is not locked to one
+  declarative-agent persona
 
 ## Upload path (admin center)
 
