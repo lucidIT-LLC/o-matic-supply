@@ -1,0 +1,20 @@
+{
+  "name": "o-matic-server",
+  "displayName": "o-MATIC Server",
+  "version": "0.1.0",
+  "description": "Connect to the o-MATIC Server with OAuth/SSO and a first-class factory startup workflow.",
+  "author": {"name": "o-MATIC AI Research Lab", "url": "https://o-matic.ai"},
+  "homepage": "https://o-matic.ai",
+  "repository": "https://github.com/lucidIT-LLC/o-matic-supply",
+  "license": "BUSL-1.1",
+  "keywords": ["o-matic", "mcp", "factory", "oauth", "sso"],
+  "userConfig": {
+    "server_url": {
+      "type": "string",
+      "title": "o-MATIC Server URL",
+      "description": "Cloud default: https://factory.o-matic.ai/mcp. For on-premises, enter the HTTPS MCP URL for that Server.",
+      "default": "https://factory.o-matic.ai/mcp"
+    }
+  },
+  "mcpServers": {"o-matic-server": {"type": "http", "url": "${user_config.server_url}"}}
+}

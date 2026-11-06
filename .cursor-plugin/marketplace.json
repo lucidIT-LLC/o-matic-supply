@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "o-MATIC Supply — tools, not people. WordPress/Elementor and Microsoft 365 MCP connectors. Ships MCP servers by design.",
-    "version": "1.4.0"
+    "version": "1.5.0"
   },
   "plugins": [
     {
@@ -19,6 +19,12 @@
       "source": "./microsoft-365",
       "description": "o-MATIC Supply — Team Assistant (Microsoft 365) MCP connector. Tools, not people.",
       "version": "0.3.0"
+    },
+    {
+      "name": "o-matic-server",
+      "source": "./o-matic-server",
+      "description": "Connect to the o-MATIC Server using OAuth/SSO.",
+      "version": "0.1.0"
     }
   ]
 }

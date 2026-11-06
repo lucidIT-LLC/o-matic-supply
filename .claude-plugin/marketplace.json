@@ -6,8 +6,8 @@
     "email": "lucideye@icloud.com"
   },
   "metadata": {
-    "description": "o-MATIC Supply \u2014 tools, not people. Governed MCP connectors for WordPress, Microsoft 365, and the O-Matic Server Slate canvas API. Ships MCP servers by design; it is equipment, not staff.",
-    "version": "2026-10-25"
+    "description": "o-MATIC Supply \u2014 tools, not people. Governed MCP connectors for WordPress/Elementor, Microsoft 365, and the o-MATIC Server.",
+    "version": "2026-11-06"
   },
   "plugins": [
     {
@@ -67,6 +67,25 @@
         "shipsMcpServer": true,
         "requiresForFullOperation": "a host able to launch stdio MCP servers, plus an Entra app registration (tenant ID + client ID) the operator controls",
         "note": "Delegated device-code sign-in only \u2014 every call acts as the signed-in user, credentials never leave the host. No OneNote application-permission tier exists in Graph at all, so OneNote is delegated-only by Microsoft's own design, not a limitation of this plugin."
+      }
+    },
+    {
+      "name": "o-matic-server",
+      "displayName": "o-MATIC Server",
+      "source": "./o-matic-server",
+      "version": "0.1.0",
+      "description": "Connect to an o-MATIC Server using OAuth/SSO; cloud is the default, with on-premises endpoint setup and a factory startup skill.",
+      "author": {"name": "LucidIT, LLC", "url": "https://o-matic.ai"},
+      "homepage": "https://o-matic.ai",
+      "license": "BUSL-1.1",
+      "category": "Productivity",
+      "keywords": ["o-matic", "mcp", "factory", "oauth", "sso", "startup"],
+      "metadata": {
+        "compatibilityTier": "Remote MCP hosts with OAuth; host-specific setup may be required",
+        "shipsMcpServer": false,
+        "shipsRemoteMcpConnection": true,
+        "requiresForFullOperation": "an o-MATIC Server reachable over HTTPS Streamable HTTP, OAuth/SSO enabled, and a user-authorized factory grant",
+        "note": "Remote connector only. No tokens ship in this package; it does not grant factory access."
       }
     }
   ]

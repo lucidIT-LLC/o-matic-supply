@@ -1,0 +1,28 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "o-matic-server",
+  "version": "0.1.0",
+  "description": "Connect an agent host to the o-MATIC Server over OAuth-protected Streamable HTTP MCP. Includes a startup workflow for hosts that load plugin skills.",
+  "author": {"name": "o-MATIC AI Research Lab", "url": "https://o-matic.ai"},
+  "homepage": "https://o-matic.ai",
+  "repository": "https://github.com/lucidIT-LLC/o-matic-supply",
+  "license": "BUSL-1.1",
+  "keywords": ["o-matic", "mcp", "factory", "oauth", "sso", "startup", "governance"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "o-MATIC Server",
+        "shortDescription": "Connect to your o-MATIC Server factory over SSO-protected MCP.",
+        "longDescription": "Connect to the cloud o-MATIC Server by default, or configure an on-premises Server endpoint. The user signs in with OAuth/SSO. The Server retains factory grants, policies, SOPs, roster, memory, audit, vault, embedding, and publishing authority.",
+        "developerName": "o-MATIC AI Research Lab",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://o-matic.ai",
+        "privacyPolicyURL": "https://o-matic.ai/privacy-policy/",
+        "termsOfServiceURL": "https://o-matic.ai/terms-of-service/",
+        "defaultPrompt": ["Start the factory and show me the startup card.", "Reconnect to the o-MATIC Server and refresh its tools."],
+        "brandColor": "#00B5AD"
+      }
+    }
+  }
+}
