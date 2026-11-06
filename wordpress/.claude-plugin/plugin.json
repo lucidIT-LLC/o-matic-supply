@@ -1,6 +1,6 @@
 {
   "name": "wordpress",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "license": "BUSL-1.1",
   "description": "o-MATIC WordPress Factory connectors: WordPress and Elementor MCP servers for site and content operations. Tools, not people - the agents ship separately in o-MATIC Studio.",
   "author": {
@@ -17,9 +17,10 @@
   ],
   "mcpServers": {
     "o-matic-wordpress-connector": {
-      "command": "node",
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/omatic-wp-launch.sh",
       "args": [
-        "${CLAUDE_PLUGIN_ROOT}/dist/index.mjs"
+        "dist/index.mjs",
+        "wordpress"
       ],
       "env": {
         "OMATIC_PROJECT_ROOT": "${CLAUDE_PROJECT_DIR}",
@@ -37,9 +38,10 @@
       }
     },
     "o-matic-elementor-connector": {
-      "command": "node",
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/omatic-wp-launch.sh",
       "args": [
-        "${CLAUDE_PLUGIN_ROOT}/dist/elementor.mjs"
+        "dist/elementor.mjs",
+        "elementor"
       ],
       "env": {
         "OMATIC_PROJECT_ROOT": "${CLAUDE_PROJECT_DIR}",

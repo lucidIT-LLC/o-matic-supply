@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.2 — 2026-11-06
+
+### Fixed
+
+- **Tools never appeared when Entra IDs were unset.** The server exited 78 before the MCP handshake, so Cursor reported a failed discovery and the chat had no Team Assistant tools. `bin/launch.sh` now stays up in advisory mode and publishes `team_assistant_setup` until `TEAM_ASSISTANT_TENANT_ID` and `TEAM_ASSISTANT_CLIENT_ID` are set. An unexpanded `${...}` placeholder is treated as unset.
+- **One Configure for every chat.** `.cursor-plugin/plugin.json` declares those two IDs as plugin variables. Set them once at user scope. Cursor passes them into `mcp.json`, `.mcp.json`, and the Claude manifest, which is the block cloud agents actually launch.
+
 ## 0.3.1 — 2026-11-05
 
 ### Fixed

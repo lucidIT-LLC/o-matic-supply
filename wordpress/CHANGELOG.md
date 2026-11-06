@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.2 — 2026-11-06
+
+### Fixed
+
+- **Cloud agents launched `node` and published no tools.** Cursor cloud reads the inline servers in `.claude-plugin/plugin.json` and ignores `mcp.json`. That block still said `command: "node"`, which a minimal PATH cannot resolve, so WordPress and Elementor failed discovery in every fresh chat. Both servers now start through `bin/omatic-wp-launch.sh`. The command is the script itself; `/bin/sh` stays out of the command field because the Claude marketplace ingest refuses it.
+- The launcher also looks at `/exec-daemon/node`, which is where Cursor cloud agents keep Node when it is not on `PATH`.
+
 ## 1.4.1 — 2026-11-05
 
 ### Fixed
