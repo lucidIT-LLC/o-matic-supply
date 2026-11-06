@@ -59,11 +59,16 @@ for (const d of readdirSync(root)) {
   // marketplace metadata says which this is, so the invariant is checked
   // against intent rather than assumed.
   const mkRaw = existsSync(mkPath) ? readFileSync(mkPath, "utf8") : "";
-  const isToolPack = /"shipsMcpServer"\s*:\s*true/.test(mkRaw);
-  const hasMcp = Boolean(pj.mcpServers) || existsSync(join(pd, ".mcp.json"));
-  if (isToolPack) {
-    if (hasMcp) OK(`${d}: tool pack ships an MCP server, as declared`);
-    else FAIL(`${d}: declared shipsMcpServer=true but no mcpServers/.mcp.json found`);
+  let entry = null;
+  try { entry = (JSON.parse(mkRaw).plugins ?? []).find(x => x.name === d); } catch {}
+  const isToolPack = entry?.metadata?.shipsMcpServer === true;
+  const isRemoteMcpPack = entry?.metadata?.shipsRemoteMcpConnection === true;
+  const hasMcp = Boolean(pj.mcpServers) || existsSync(join(pd, ".mcp.json")) || existsSync(join(pd, "mcp.json"));
+  if (!entry) {
+    OK(`${d}: not listed in this marketplace; connector declaration check skipped`);
+  } else if (isToolPack || isRemoteMcpPack) {
+    if (hasMcp) OK(`${d}: ${isRemoteMcpPack ? "remote MCP connection" : "MCP server"} is present, as declared`);
+    else FAIL(`${d}: declared as an MCP connector but no mcpServers/.mcp.json/mcp.json found`);
   } else {
     if (hasMcp) FAIL(`${d}: skill pack DECLARES mcpServers — restricted hosts will omit it`);
     else OK(`${d}/plugin.json declares no mcpServers`);
@@ -139,16 +144,18 @@ for (const d of readdirSync(root)) {
 // reached the wrong cause for the microsoft-365 crash.
 {
   const CLAUDE_BUILTINS = new Set(["CLAUDE_PLUGIN_ROOT", "CLAUDE_PLUGIN_DATA", "CLAUDE_PROJECT_DIR"]);
-  // Cursor docs (cursor.com/docs/reference/plugins): mcp.json uses ${PLUGIN_ROOT}
-  // (and may use cwd). Distinct from Claude's CLAUDE_PLUGIN_* set.
-  const CURSOR_BUILTINS = new Set(["PLUGIN_ROOT", "PLUGIN_DATA"]);
+  // Cursor docs (cursor.com/docs/reference/plugins, measured 2026-11-05):
+  // expands ${CURSOR_PLUGIN_ROOT} and ${CLAUDE_PLUGIN_ROOT} in command/args/env/cwd.
+  // Does NOT expand Agent Plugins ${PLUGIN_ROOT}/${PLUGIN_DATA} — literal cwd
+  // makes Node spawn report "spawn /bin/sh ENOENT" (reproduced on Mac Studio).
+  const CURSOR_BUILTINS = new Set(["CURSOR_PLUGIN_ROOT", "CLAUDE_PLUGIN_ROOT"]);
   const SUBST_FIELDS = {
     stdio: new Set(["command", "args", "env"]),
     http: new Set(["url", "headers", "headersHelper"]),
     sse: new Set(["url", "headers", "headersHelper"]),
     ws: new Set(["url", "headers", "headersHelper"]),
   };
-  // Cursor stdio examples put ${PLUGIN_ROOT} in cwd — allow cwd only for cursor manifests.
+  // Cursor stdio examples put ${CURSOR_PLUGIN_ROOT} in cwd — allow cwd only for cursor manifests.
   const CURSOR_SUBST_FIELDS = {
     stdio: new Set(["command", "args", "env", "cwd"]),
     http: new Set(["url", "headers", "headersHelper"]),
@@ -166,7 +173,7 @@ for (const d of readdirSync(root)) {
 
   const TOKEN = /\$\{([^}]*)\}/g;
   // Walk a server object, remembering which top-level field we are inside.
-  const scanValue = (val, field, ctx, transport, { builtins, substFields }) => {
+  const scanValue = (val, field, ctx, transport, { builtins, substFields, userConfigVars = new Set() }) => {
     if (typeof val === "string") {
       for (const m of val.matchAll(TOKEN)) {
         const v = m[1];
@@ -175,6 +182,8 @@ for (const d of readdirSync(root)) {
           FAIL(`${ctx}: \${${v}} sits in "${field}", which the vendor doc does not list as a substituted field for a ${transport} server — it will be passed through as the literal text "\${${v}}"`);
         } else if (builtins.has(v)) {
           OK(`${ctx}: \${${v}} in "${field}"`);
+        } else if (userConfigVars.has(v)) {
+          OK(`${ctx}: \${${v}} in "${field}" — declared Claude userConfig option`);
         } else if (allowed(ctx.split("/")[0], v)) {
           OK(`${ctx}: \${${v}} in "${field}" — allowlisted with a recorded reason`);
         } else {
@@ -183,9 +192,9 @@ for (const d of readdirSync(root)) {
       }
       return;
     }
-    if (Array.isArray(val)) return val.forEach(x => scanValue(x, field, ctx, transport, { builtins, substFields }));
+    if (Array.isArray(val)) return val.forEach(x => scanValue(x, field, ctx, transport, { builtins, substFields, userConfigVars }));
     if (val && typeof val === "object")
-      for (const [, x] of Object.entries(val)) scanValue(x, field, ctx, transport, { builtins, substFields });
+      for (const [, x] of Object.entries(val)) scanValue(x, field, ctx, transport, { builtins, substFields, userConfigVars });
   };
 
   const scanManifest = (file, rel, getServers, opts) => {
@@ -193,12 +202,13 @@ for (const d of readdirSync(root)) {
     catch { return; }                       // parse errors already reported above
     const map = getServers(j);
     if (!map || typeof map !== "object") return;
+    const userConfigVars = new Set(Object.keys(j.userConfig ?? {}).map(key => `user_config.${key}`));
     for (const [name, srv] of Object.entries(map)) {
       if (!srv || typeof srv !== "object") continue;
       checks++;
       const transport = srv.type ?? (srv.url || srv.httpUrl ? "http" : "stdio");
       for (const [field, val] of Object.entries(srv))
-        scanValue(val, field, `${rel}[${name}]`, transport, opts);
+        scanValue(val, field, `${rel}[${name}]`, transport, { ...opts, userConfigVars });
     }
   };
 

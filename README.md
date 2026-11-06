@@ -18,15 +18,14 @@ lives.
 |---|---|
 | `wordpress@o-matic-supply` | The **WordPress** and **Elementor** MCP connectors — site and content operations, Elementor page building, template and theme work, media handling, and a sandboxed export/import path. |
 | `microsoft-365@o-matic-supply` | The **Team Assistant** MCP connector — governed read/write access to Microsoft Planner (including Goals), Teams channels, SharePoint Lists, and OneNote over Microsoft Graph, with per-user OAuth device-code sign-in and OS-keychain token storage. |
-| `o-matic-server@o-matic-supply` | The **o-MATIC Server** remote MCP connector — OAuth/SSO access to the Server's governed tools, with a cloud default, on-prem endpoint setup, and a factory startup skill for hosts that load plugin skills. |
+| `o-matic-server@o-matic-supply` | The **o-MATIC Server** remote MCP connector — OAuth/SSO access to the Server's governed tools, with a cloud default and on-prem endpoint setup. |
 
 ## This pack ships MCP servers — and that is the point
 
-Supply ships locally hosted connectors and remote MCP connections. The o-MATIC
-Server plugin is a portable Agent Plugins package for hosts that support that
-standard; Claude Code has a native manifest overlay, while Grok and some other
-hosts use their custom MCP connection flow. Compatibility is host-specific:
-see `o-matic-server/adapters/README.md`.
+Supply ships local MCP connectors and remote MCP connections. The Server
+connector uses the portable Agent Plugins format where supported, with
+host-specific setup for other clients. See
+`o-matic-server/adapters/README.md` for the supported routes and limits.
 
 Supply remains the connector shelf. The people who use these tools ship
 separately in **o-MATIC Agency**, **o-MATIC Firm**, and **o-MATIC Studio**.
@@ -48,14 +47,7 @@ these connectors are what they reach for.
 /plugin install wordpress@o-matic-supply
 ```
 
-**Cursor:** add `lucidIT-LLC/o-matic-supply` as a plugin marketplace, then
-install the connector you need. The o-MATIC Server plugin is remote HTTP MCP;
-the local WordPress and Microsoft 365 plugins keep their existing host setup.
-See `o-matic-server/SETUP.md` and `o-matic-server/adapters/README.md` for its
-cloud/on-prem and cross-host setup. `o-matic-server/DESIGN.md` records the
-startup guarantee, authority boundaries, network implications, and release
-plan. Current published release baseline:
-`supply--v1.4.0`; this working change has not been released.
+**Cursor Teams and Enterprise:** a team admin can import `lucidIT-LLC/o-matic-supply` as a team marketplace from **Dashboard → Plugins & MCPs → Team Marketplaces → Add Marketplace → Import from Repo**, then install the connector they need in Cursor Customize. The o-MATIC Server package uses remote HTTP MCP; the local WordPress and Microsoft 365 plugins keep their existing setup. See `o-matic-server/SETUP.md` and `o-matic-server/adapters/README.md` for cloud/on-prem and cross-host details. `o-matic-server/DESIGN.md` records startup limits and authority boundaries. Cursor requires public Marketplace plugins to be open source; this repository's BUSL license is not eligible for public Marketplace submission. The team marketplace route remains available under the configured repository access. Current published release baseline: `supply--v1.4.1`; the 1.5.0 catalog update is not released yet. See [Cursor's plugin guide](https://cursor.com/docs/plugins) and [Marketplace submission page](https://cursor.com/marketplace/publish).
 
 Configure the connection with `wordpress_factory_configure` before use, and read
 `wordpress_factory_usage_guide` for the current capability summary. Forwarded
@@ -74,17 +66,18 @@ in the host. For on-prem, open `o-matic-server/setup/index.html`, check
 configuration. The selected Server must be reachable from that host and expose
 compatible OAuth discovery.
 
-The `start-factory` skill guides hosts that load plugin skills to call Server
-`startup` before factory work. Installing the connector does not force every
-host to run startup, create grants, or add governance. Hosts without plugin
-skills need a host-level startup instruction or the manual startup workflow.
+Call Server `startup` before factory work. The Supply package contains the
+connector and setup instructions; use the Agency Probot skill or the host's
+required startup instruction to run the sequence in each conversation.
+Installing the connector does not force every host to run startup, create
+grants, or add governance.
 
 ## Security
 
-**This pack executes code and handles credentials.** Read `SECURITY.md` before
-deploying it. No credentials ship in the repository. Local connectors retain
-their existing credential controls; the remote Server connector uses the host's
-OAuth/SSO flow, and the Server enforces its grants on every request.
+**This pack executes local connectors and manages a remote Server connection.**
+Read `SECURITY.md` before deploying it. No credentials ship in the repository;
+local connectors keep their existing credential controls and the Server
+connection uses host-managed OAuth/SSO.
 
 ## License
 

@@ -14,7 +14,7 @@ governance.
 
 The package has two pieces:
 
-1. A portable Agent Plugins manifest, MCP connection, and `start-factory` skill.
+1. A portable Agent Plugins manifest and MCP connection.
 2. Host overlays and setup notes where installation, URL selection, OAuth, or
    lifecycle behavior differs.
 
@@ -28,8 +28,9 @@ points:
 
 - MCP is the interoperability layer. A host can use the Server by URL even if
   it does not install this plugin format.
-- Package installation can distribute MCP configuration and a startup skill,
-  but hosts decide when skills load and whether a session-start hook runs.
+- Package installation can distribute MCP configuration, but hosts decide when
+  instructions load and whether a session-start hook runs. Supply stays a
+  connector pack; the Agency Probot skill owns the startup persona/workflow.
 - Therefore, plugin installation cannot guarantee `startup` on every new
   conversation. Hosts with lifecycle hooks can add a host-specific startup
   gate; other hosts need a required instruction or an explicit startup step.
@@ -59,7 +60,7 @@ For each conversation that may use factory capabilities:
 4. Read and report the Server's returned state; do not recompute readiness.
 5. If the host cannot preserve a conversation key, report that continuity limit.
 
-The skill documents this sequence. To make it automatic, install a host-level
+The Agency Probot skill documents this sequence. To make it automatic, install a host-level
 required instruction or supported session hook separately. Do not encode
 factory-specific names, policies, roster, session state, or memory in plugin
 files.
@@ -71,7 +72,7 @@ files.
 | Policies, SOPs, roster, factory grants, tasks, decisions, memory, audit and readiness | o-MATIC Server database | These change per factory and are governed by the Server. |
 | OAuth tokens and host pairing | Agent host's auth store and the Server's identity layer | Credentials are per host/user and must not be copied between clients. |
 | Server endpoint selection | Host plugin configuration; cloud URL as default | Different clients may reach different Server deployments. Store no secret here. |
-| Portable startup sequence | Supply plugin skill | It is repeatable client workflow shared across tools. |
+| Portable startup sequence | Agency Probot skill and host instructions; this package documents the connection requirements | It is a repeatable client workflow, separate from the connector. |
 | Required startup enforcement | Host settings/hooks, or a future Server gate | The portable plugin format does not run uniformly on every host. |
 | Project files, client-specific rules and local environment context | Relevant workspace/repository | These are local to the project and cannot safely move to a shared Server plugin. |
 
@@ -81,8 +82,8 @@ environment boundaries, or client-specific work.
 
 ## Does the Server need an update?
 
-No Server update is part of packaging the connection or distributing the
-startup skill. The live Foundry startup reported Server 3.0.3 as current and its
+No Server update is part of packaging the connection or distributing its
+host setup guidance. The live Foundry startup reported Server 3.0.3 as current and its
 existing capabilities as ready. That demonstrates the current Server surface is
 available to this authenticated Codex connection; it does not prove every host's
 OAuth flow or the public plugin-review flow end to end.

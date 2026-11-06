@@ -1,30 +1,38 @@
 {
   "name": "o-matic-supply",
   "owner": {
-    "name": "lucidIT-LLC"
+    "name": "LucidIT, LLC"
   },
   "metadata": {
-    "description": "o-MATIC Supply — tools, not people. WordPress/Elementor and Microsoft 365 MCP connectors. Ships MCP servers by design.",
+    "description": "o-MATIC Supply \u2014 tools, not people. WordPress/Elementor, Microsoft 365, and o-MATIC Server MCP connectors.",
     "version": "1.5.0"
   },
   "plugins": [
     {
       "name": "wordpress",
       "source": "./wordpress",
-      "description": "o-MATIC Supply — WordPress and Elementor MCP connectors. Tools, not people.",
-      "version": "1.4.0"
+      "description": "o-MATIC Supply \u2014 WordPress and Elementor MCP connectors. Tools, not people.",
+      "version": "1.4.1",
+      "displayName": "o-MATIC Supply \u2014 WordPress & Elementor",
+      "logo": "wordpress/assets/logo.png",
+      "category": "productivity"
     },
     {
       "name": "microsoft-365",
       "source": "./microsoft-365",
-      "description": "o-MATIC Supply — Team Assistant (Microsoft 365) MCP connector. Tools, not people.",
-      "version": "0.3.0"
+      "description": "o-MATIC Supply \u2014 Team Assistant (Microsoft 365) MCP connector. Tools, not people.",
+      "version": "0.3.1",
+      "displayName": "o-MATIC Supply \u2014 Team Assistant (Microsoft 365)",
+      "logo": "microsoft-365/assets/logo.png",
+      "category": "productivity"
     },
     {
       "name": "o-matic-server",
       "source": "./o-matic-server",
       "description": "Connect to the o-MATIC Server using OAuth/SSO.",
-      "version": "0.1.0"
+      "version": "0.1.0",
+      "displayName": "o-MATIC Server",
+      "category": "productivity"
     }
   ]
 }

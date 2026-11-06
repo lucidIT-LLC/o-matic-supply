@@ -31,8 +31,9 @@ the host provides an approved network path.
 
 ## Startup
 
-Use the `start-factory` skill before factory work where the host loads plugin
-skills. It calls Server `startup`, selects a granted factory by the returned
-database, reads the startup state, and refreshes tools after an auth or tool
-discovery change. Hosts that do not load skills need host-specific startup
-instructions. Installation alone does not invoke startup on every new chat.
+Call Server `startup` before factory work. The Supply plugin is the connector;
+it does not bundle an agent persona or startup skill. Use the o-MATIC Agency
+Probot skill where installed, or add the short startup sequence to the host's
+required instructions. After a sign-in or permission change, refresh or
+rediscover MCP tools. Installation alone does not invoke startup on every new
+chat.

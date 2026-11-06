@@ -84,7 +84,7 @@ export function checkVscode(path, label) {
 
 // --- Cursor 4.7: mcp.json under plugin root with top-level mcpServers --------
 // cursor.com/docs/reference/plugins — Cursor discovers mcp.json; plugin.json
-// may set mcpServers to a path. cwd may carry ${PLUGIN_ROOT}.
+// may set mcpServers to a path. cwd may carry ${CURSOR_PLUGIN_ROOT}.
 export function checkCursorMcp(path, label) {
   const f = readJson(path);
   if (!('mcpServers' in f)) return record(label, false, 'missing top-level "mcpServers"');

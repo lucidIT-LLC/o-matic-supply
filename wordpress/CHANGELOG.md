@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1 — 2026-11-05
+
+### Fixed
+
+- **Cursor MCP spawn `ENOENT`.** Cursor does not expand Agent Plugins `${PLUGIN_ROOT}` in `mcp.json`. The 1.4.0 Cursor launch used `cwd: "${PLUGIN_ROOT}"` with `command: "/bin/sh"`, so the MCP utility received a literal nonexistent cwd and reported `spawn /bin/sh ENOENT` (measured Mac Studio; WordPress, Elementor, Team Assistant all red). Manual `node dist/*.mjs` still initialized. Cursor expands `${CURSOR_PLUGIN_ROOT}` / `${CLAUDE_PLUGIN_ROOT}` — Phot-o-matic Walk stayed green on the latter. `mcp.json` now launches the GUI-safe shell launcher directly via `${CURSOR_PLUGIN_ROOT}/bin/omatic-wp-launch.sh` with matching cwd (no `/bin/sh` wrapper command).
+
+
 ## 1.4.0 — 2026-10-25
 
 ### Added

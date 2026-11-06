@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "o-matic-server",
   "version": "0.1.0",
-  "description": "Connect an agent host to the o-MATIC Server over OAuth-protected Streamable HTTP MCP. Includes a startup workflow for hosts that load plugin skills.",
+  "description": "Connect an agent host to the o-MATIC Server over OAuth-protected Streamable HTTP MCP.",
   "author": {"name": "o-MATIC AI Research Lab", "url": "https://o-matic.ai"},
   "homepage": "https://o-matic.ai",
   "repository": "https://github.com/lucidIT-LLC/o-matic-supply",
