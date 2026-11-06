@@ -22,7 +22,7 @@ tool surface on `https://factory.o-matic.ai/mcp` with Entra SSO.
 | App id | `6799c907-19f2-49a8-826c-4473bc645d59` |
 | Connector id / namespace | `omaticserver` |
 | MCP URL | `https://factory.o-matic.ai/mcp` |
-| Auth | `OAuthPluginVault` (Entra SSO registration `referenceId`, byte-identical to the hand-built package). Scope is **not** in the zip — see [`docs/OAUTH-SCOPE-FIX.md`](docs/OAUTH-SCOPE-FIX.md) for the AADSTS70011 / App ID URI fix. |
+| Auth | `OAuthPluginVault` (Entra SSO registration `referenceId`, byte-identical to the hand-built package). Scope is **not** in the zip — it lives on Teams Portal **Microsoft Entra SSO client ID registration**; see [`docs/OAUTH-SCOPE-FIX.md`](docs/OAUTH-SCOPE-FIX.md). |
 | Tools | Full live o-MATIC Server MCP surface (**68** tools pinned). Writes use `capabilities.confirmation.type=AdaptiveCard`; reads omit confirmation. See [`docs/TOOL-CLASSIFICATION.md`](docs/TOOL-CLASSIFICATION.md). |
 | Mark | **Backbone** (Jimmy approved 2026-11-06; Brandy + Monet) |
 
