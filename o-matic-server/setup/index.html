@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>o-MATIC Server connection setup</title>
+  <style>
+    :root { color-scheme: light dark; font: 16px/1.5 system-ui, sans-serif; }
+    body { max-width: 760px; margin: 2rem auto; padding: 0 1rem; }
+    main { border: 1px solid #8886; border-radius: 1rem; padding: 1.5rem; }
+    h1 { margin-top: 0; }
+    label { display: block; margin: 1rem 0 .4rem; font-weight: 650; }
+    input[type=url], textarea { box-sizing: border-box; width: 100%; padding: .7rem; border-radius: .5rem; }
+    input[type=checkbox] { width: 1.1rem; height: 1.1rem; vertical-align: middle; }
+    button { margin: .75rem .5rem .75rem 0; padding: .65rem 1rem; border: 0; border-radius: .5rem; cursor: pointer; }
+    .note { opacity: .8; }
+    .error { color: #c33; min-height: 1.5em; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Connect to o-MATIC Server</h1>
+  <p>Choose the cloud Server or configure an on-premises endpoint. Your host
+    handles OAuth/SSO sign-in after you import the configuration.</p>
+  <label><input id="onPrem" type="checkbox"> Use an on-premises Server</label>
+  <label for="url">Server MCP URL</label>
+  <input id="url" type="url" value="https://factory.o-matic.ai/mcp" spellcheck="false" autocomplete="url">
+  <p class="note">Use the complete HTTPS MCP URL, typically ending in
+    <code>/mcp</code>. The Server must be reachable and provide OAuth discovery.</p>
+  <p id="error" class="error" role="alert"></p>
+  <label for="output">Portable MCP configuration</label>
+  <textarea id="output" rows="16" readonly></textarea>
+  <button id="copy" type="button">Copy configuration</button>
+  <button id="download" type="button">Download mcp.json</button>
+  <p class="note">This file carries an endpoint only; it contains no user token or
+    secret. Add it using your host's MCP setup flow, then complete sign-in there.</p>
+</main>
+<script>
+  const CLOUD = "https://factory.o-matic.ai/mcp";
+  const checkbox = document.querySelector("#onPrem");
+  const url = document.querySelector("#url");
+  const output = document.querySelector("#output");
+  const error = document.querySelector("#error");
+  const config = () => ({
+    "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+    "mcpServers": {
+      "o-matic-server": {
+        "type": "streamable-http",
+        "url": url.value.trim(),
+        "extensions": {
+          "com.openai": { "auth": { "type": "oauth", "client": { "mode": "dcr" } } }
+        }
+      }
+    }
+  });
+  function render() {
+    if (!checkbox.checked) url.value = CLOUD;
+    error.textContent = "";
+    try {
+      const parsed = new URL(url.value.trim());
+      if (parsed.protocol !== "https:") throw new Error("Use an HTTPS MCP URL.");
+      if (parsed.username || parsed.password || parsed.hash) throw new Error("Do not include credentials or a URL fragment.");
+      if (checkbox.checked && parsed.origin === new URL(CLOUD).origin) throw new Error("Enter the HTTPS URL for your on-premises Server.");
+      output.value = JSON.stringify(config(), null, 2);
+    } catch (e) {
+      output.value = "";
+      error.textContent = e.message;
+    }
+  }
+  checkbox.addEventListener("change", () => {
+    url.value = checkbox.checked ? "" : CLOUD;
+    render();
+    if (checkbox.checked) url.focus();
+  });
+  url.addEventListener("input", render);
+  document.querySelector("#copy").addEventListener("click", async () => {
+    if (output.value) await navigator.clipboard.writeText(output.value);
+  });
+  document.querySelector("#download").addEventListener("click", () => {
+    if (!output.value) return;
+    const blob = new Blob([output.value + "\n"], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "mcp.json";
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+  render();
+</script>
+</body>
+</html>
