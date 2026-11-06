@@ -1,0 +1,68 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
+  "schema_version": "v2.4",
+  "name_for_human": "o-MATIC Server",
+  "description_for_human": "Read-only o-MATIC Server tools.",
+  "namespace": "omaticserver",
+  "functions": [
+    {
+      "name": "connections_list",
+      "description": "Which connections this client was granted. An empty list is a real answer."
+    },
+    {
+      "name": "omatic_guide",
+      "description": "Documentation this server hands out about itself. topic='operating' (default) is the operating guide: the full tool list, how to start a factory, how retrieval is governed, and what a refusal means. topic='architecture' is the architecture description in industry terms. topic='slate' is the slate.ops/1 operation set. Other topics: templates, project-headquarters, server-closet, upgrade, blueprint, blueprint-architecture, blueprint-acceptance-gate, blueprint-certification, blueprint-install-upgrade, blueprint-postgres, blueprint-components."
+    },
+    {
+      "name": "search",
+      "description": "Semantic retrieval in ONE call: embeds the query on this host and searches the corpus. The vector never leaves the server. Searches CONTENT CHUNKS by default; pass tier='semantic' only for the entity router."
+    },
+    {
+      "name": "task_relationships",
+      "description": "Which unfinished tasks are tied together, and which lanes each group touches. Links: 'cited' (names another by #number) and 'similar' (inferred). Pass task_id for that task's blast radius."
+    },
+    {
+      "name": "task_duplicate_check",
+      "description": "CALL BEFORE INSERTING INTO factory.tasks. Embeds the draft task and returns closest existing tasks with similarity. verdict: likely_duplicate, related, or no_close_match. Names candidates; does not decide."
+    },
+    {
+      "name": "slate_entity_search",
+      "description": "Search Factory systems of record a canvas element may be bound to: tasks, decisions, objectives and services, within the granted factory's tenant. Use returned id (e.g. task:509) as entity_id of a binding proposal."
+    },
+    {
+      "name": "slate_entity_verify",
+      "description": "Confirm one entity still exists in its Factory system of record and return it with a verification stamp. Unresolvable id returns verified=false; nothing is invented."
+    },
+    {
+      "name": "module_status",
+      "description": "Read-only. Reports add-on modules this server manages (installed, running, healthy, tier), which capabilities have a provider, and any module package discovery refused. Starts and changes nothing."
+    }
+  ],
+  "runtimes": [
+    {
+      "type": "RemoteMCPServer",
+      "auth": {
+        "type": "OAuthPluginVault",
+        "reference_id": "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE="
+      },
+      "run_for_functions": [
+        "connections_list",
+        "omatic_guide",
+        "search",
+        "task_relationships",
+        "task_duplicate_check",
+        "slate_entity_search",
+        "slate_entity_verify",
+        "module_status"
+      ],
+      "spec": {
+        "url": "https://factory.o-matic.ai/mcp",
+        "mcp_tool_description": {
+          "file": "mcp-tools.json"
+        }
+      }
+    }
+  ],
+  "privacy_policy_url": "https://lucidit.io/privacy",
+  "legal_info_url": "https://lucidit.io/terms"
+}

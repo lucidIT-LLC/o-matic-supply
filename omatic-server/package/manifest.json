@@ -1,0 +1,50 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.30/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.30",
+  "version": "0.1.4",
+  "id": "6799c907-19f2-49a8-826c-4473bc645d59",
+  "developer": {
+    "name": "lucidIT, LLC (o-MATIC)",
+    "websiteUrl": "https://lucidit.io",
+    "privacyUrl": "https://lucidit.io/privacy",
+    "termsOfUseUrl": "https://lucidit.io/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "o-MATIC Server",
+    "full": "o-MATIC Server for Microsoft 365 Copilot"
+  },
+  "description": {
+    "short": "o-MATIC Server in Copilot via Entra SSO MCP.",
+    "full": "o-MATIC Server MCP connector for Microsoft 365 Copilot. Entra SSO against https://factory.o-matic.ai/mcp with eight pinned read-only tools. Plugin/MCP connection only — not a declarative agent."
+  },
+  "accentColor": "#00B5AD",
+  "permissions": [
+    "identity"
+  ],
+  "validDomains": [
+    "factory.o-matic.ai"
+  ],
+  "agentConnectors": [
+    {
+      "id": "omaticserver",
+      "displayName": "o-MATIC Server",
+      "description": "Read-only o-MATIC Server MCP tools via Entra SSO.",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "https://factory.o-matic.ai/mcp",
+          "authorization": {
+            "type": "OAuthPluginVault",
+            "referenceId": "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE="
+          },
+          "mcpToolDescription": {
+            "file": "mcp-tools.json"
+          }
+        }
+      }
+    }
+  ]
+}
