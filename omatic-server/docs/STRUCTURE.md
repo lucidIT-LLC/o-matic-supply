@@ -14,7 +14,7 @@ Not a Cowork-only package:
 - `OAuthPluginVault` — Copilot Chat requires OAuth; `None` works in Cowork only
   and is refused by our validator
 - Packaged `mcpToolDescription` — Cowork still requires the file on 1.29+;
-  pinning also keeps the eight read-only tools identical everywhere
+  pinning also keeps the full tool surface identical everywhere
 - Connector-only (`agentConnectors`, no `copilotAgents`, no `agentSkills`) — any
   host that can use a governed connector can attach it; it is not locked to one
   declarative-agent persona
