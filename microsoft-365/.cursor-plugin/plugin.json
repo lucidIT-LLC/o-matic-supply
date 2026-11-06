@@ -1,6 +1,6 @@
 {
   "name": "microsoft-365",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Team Assistant MCP: an AI-native MCP server giving governed read/write access to Planner (including Goals), Teams, SharePoint and OneNote over Microsoft Graph. Self-hosted, per-tenant, delegated sign-in \u2014 no central service, no admin-consent-for-others.",
   "author": {
     "name": "LucidIT, LLC",
@@ -23,6 +23,21 @@
     "cursor"
   ],
   "mcpServers": "./mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "TEAM_ASSISTANT_TENANT_ID": {
+        "type": "string",
+        "title": "Entra directory (tenant) ID",
+        "description": "Directory (tenant) ID from the Entra app registration Overview blade. Not a secret. Set once here at user scope and every chat and project loads Team Assistant with it."
+      },
+      "TEAM_ASSISTANT_CLIENT_ID": {
+        "type": "string",
+        "title": "Entra application (client) ID",
+        "description": "Application (client) ID from the same Overview blade. Not a secret. Set once here at user scope and every chat and project loads Team Assistant with it."
+      }
+    }
+  },
   "displayName": "o-MATIC Supply \u2014 Team Assistant (Microsoft 365)",
   "logo": "assets/logo.png",
   "category": "productivity",

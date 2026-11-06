@@ -38,6 +38,13 @@
       "reason": "MEASURED 2026-09-28 (task #778): started dist/index.mjs with all four set to their literal unexpanded '${...}' strings. Before the fix it did not crash but answered initialize with protocolVersion '${MCP_PROTOCOL_VERSION}', a version no client knows. Fixed in 0.1.2: an empty or unexpanded value is read as unset, the handshake returns a real version (the client's when supported), and an unconfigured tool call answers 'Slate is not configured'. Garbage-tolerant, verified by running it.",
       "risk": "LOW -- measured tolerant after the 0.1.2 fix",
       "recorded": "2026-09-28"
+    },
+    {
+      "packs": ["microsoft-365"],
+      "vars": ["TEAM_ASSISTANT_TENANT_ID", "TEAM_ASSISTANT_CLIENT_ID"],
+      "reason": "MEASURED 2026-11-06: Cursor cloud agents launch the Claude manifest, and an unset plugin variable is passed through as the literal '${TEAM_ASSISTANT_TENANT_ID}'. The real server then exits 78 before tools/list, so the chat shows no Team Assistant tools at all. bin/launch.sh treats an unexpanded placeholder as unset and stays up in advisory mode (one team_assistant_setup tool) until Configure supplies real Entra IDs. A set value is the user-scoped plugin variable, applied to every chat.",
+      "risk": "LOW -- unexpanded values never reach the Graph client; launch.sh drops them",
+      "recorded": "2026-11-06"
     }
   ]
 }

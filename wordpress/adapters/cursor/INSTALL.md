@@ -5,7 +5,7 @@ Supply is **tools, not people**. This plugin ships MCP connectors only. Studio s
 ## Primary path (marketplace plugin)
 
 1. Add this repository as a Cursor plugin marketplace (GitHub: `lucidIT-LLC/o-matic-supply`).
-2. Install the `wordpress` plugin. It declares `.cursor-plugin/plugin.json` with `"mcpServers": "./mcp.json"` — two stdio servers: `o-matic-wordpress-connector` and `o-matic-elementor-connector`.
+2. Install the `wordpress` plugin at **User** scope, not project scope. User scope loads both stdio servers (`o-matic-wordpress-connector` and `o-matic-elementor-connector`) in any chat and any project. A project install only exists inside that one repo.
 3. Configure each site via the connector tools (`wordpress_factory_configure` / `elementor_factory_configure`). Prefer Application Password via env or macOS Keychain reference — not plaintext in project files.
 4. Prefer live MCP tools returned by the host. Fall back to `adapters/cursor/wordpress.md` and `adapters/cursor/elementor.md` for condensed method cards and Cursor host rules.
 
