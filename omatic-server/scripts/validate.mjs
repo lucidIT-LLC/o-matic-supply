@@ -233,37 +233,39 @@ async function main() {
     else OK("ai-plugin url matches");
   }
 
-  // --- pin parity ---
+  // --- pin parity (full live MCP surface) ---
   const pinned = runtime?.run_for_functions || [];
   const toolNames = (mcpTools.tools || []).map((t) => t.name);
-  const expected = [
-    "connections_list",
-    "omatic_guide",
-    "search",
-    "task_relationships",
-    "task_duplicate_check",
-    "slate_entity_search",
-    "slate_entity_verify",
-    "module_status",
-  ];
-  if (JSON.stringify(pinned) !== JSON.stringify(expected)) {
-    FAIL(`run_for_functions mismatch: ${JSON.stringify(pinned)}`);
-  } else OK("run_for_functions = 8 pinned read-only tools");
-  if (JSON.stringify(toolNames) !== JSON.stringify(expected)) {
-    FAIL(`mcp-tools.json names mismatch: ${JSON.stringify(toolNames)}`);
-  } else OK("mcp-tools.json names match run_for_functions");
   const fnNames = (aiPlugin.functions || []).map((f) => f.name);
-  if (JSON.stringify(fnNames) !== JSON.stringify(expected)) {
-    FAIL(`ai-plugin functions names mismatch`);
-  } else OK("ai-plugin functions names match");
+  if (pinned.length < 1) FAIL("run_for_functions empty");
+  else OK(`run_for_functions count=${pinned.length}`);
+  if (JSON.stringify(pinned) !== JSON.stringify(toolNames)) {
+    FAIL("run_for_functions must match mcp-tools.json names (same order)");
+  } else OK("mcp-tools.json names match run_for_functions");
+  if (JSON.stringify(fnNames) !== JSON.stringify(pinned)) {
+    FAIL("ai-plugin functions names must match run_for_functions");
+  } else OK(`ai-plugin functions names match (${fnNames.length})`);
+  for (const n of pinned) {
+    if (!/^[A-Za-z0-9_]+$/.test(n)) FAIL(`illegal function name ${n}`);
+  }
+  OK("function names match ^[A-Za-z0-9_]+$");
+  // Soft Microsoft guidance: quality may degrade beyond ~10 tools — report, do not drop.
+  if (pinned.length > 10) {
+    OK(`NOTE soft quality guidance: ${pinned.length} tools > ~10 (overview-plugins); none dropped per Jimmy 2026-11-06`);
+  }
 
   // --- real-validator lint ---
   console.log("\n-- real-validator lint --");
+  let missingDesc = 0;
   for (const fn of aiPlugin.functions || []) {
     if (!fn.description || !String(fn.description).trim()) {
       FAIL(`ai-plugin function ${fn.name} missing description`);
-    } else OK(`function ${fn.name} has description`);
+      missingDesc++;
+    } else if (String(fn.description).length > 4096) {
+      FAIL(`ai-plugin function ${fn.name} description > 4K (schema SHOULD limit)`);
+    }
   }
+  if (!missingDesc) OK(`all ${fnNames.length} ai-plugin functions have non-empty descriptions (<=4K)`);
   for (const t of mcpTools.tools || []) {
     if (!t.description || !String(t.description).trim()) {
       FAIL(`mcp-tools ${t.name} missing description`);
@@ -277,6 +279,23 @@ async function main() {
   walkConfirmations(manifest, "manifest", confirmHits);
   if (confirmHits.length) confirmHits.forEach((h) => FAIL(h));
   else OK("no confirmation.type 'None'");
+
+  // Write tools must use AdaptiveCard; read tools must omit confirmation.
+  let writeCards = 0;
+  let readOmit = 0;
+  for (const fn of aiPlugin.functions || []) {
+    const conf = fn.capabilities?.confirmation;
+    if (conf) {
+      if (conf.type !== "AdaptiveCard") {
+        FAIL(`${fn.name}: confirmation.type must be AdaptiveCard when present`);
+      } else if (!conf.title || !conf.body) {
+        FAIL(`${fn.name}: AdaptiveCard confirmation needs title and body`);
+      } else writeCards++;
+    } else {
+      readOmit++;
+    }
+  }
+  OK(`confirmation split: AdaptiveCard=${writeCards}, omitted(read)=${readOmit}`);
 
   // --- icons ---
   console.log("\n-- icons --");

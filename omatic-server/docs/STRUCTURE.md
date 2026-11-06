@@ -81,7 +81,7 @@ same runtime facts into `agentConnectors.remoteMcpServer`:
 | `auth.reference_id` (byte-identical) | `authorization.referenceId` (same bytes) |
 | `spec.url` | `mcpServerUrl` |
 | `spec.mcp_tool_description.file` | `mcpToolDescription.file` |
-| `run_for_functions` + `functions[]` | pinned names in `mcp-tools.json` (+ kept in source `ai-plugin.json`) |
+| `run_for_functions` + `functions[]` | **all** live MCP tool names in `mcp-tools.json` + source `ai-plugin.json` (0.1.5+) |
 | `namespace: omaticserver` | connector `id: omaticserver` |
 
 `package/ai-plugin.json` is retained in-repo as the pinned-function /

@@ -2,40 +2,546 @@
   "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
   "schema_version": "v2.4",
   "name_for_human": "o-MATIC Server",
-  "description_for_human": "Read-only o-MATIC Server tools.",
+  "description_for_human": "o-MATIC Server MCP connector (full tool surface).",
   "namespace": "omaticserver",
   "functions": [
+    {
+      "name": "capability_request",
+      "description": "Ask for a capability that an installed add-on module provides, without naming the module. Only capabilities a module slot marks client-callable are available (language.explain: put a finding into plain words; language.advise: investigate and recommend). Needs the grant `capability:NAME` (for example capability:language.advise), which in 2.5.0 only a static bearer client can hold (a person signed in with OAuth cannot; see docs/CONFIGURE.md). Read-only: the module has no network and the server hands it only your input. Every call is audited by digest and size (never by content); a call that cannot be audited is refused. Rate limited per client. The answer is MODEL-GENERATED and UNVERIFIED, labeled so in the result; language.advise is advisory only and nothing is executed. With no provider you get capability_state=capability_unavailable and a reason_code (no_provider, provider_unhealthy, agent_unavailable). Other refusals: bad_request, not_client_callable, rate_limited, audit_unavailable, module_error. Reference: docs/MODULES.md.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm capability request",
+          "body": "Allow o-MATIC Server to run `capability_request`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
     {
       "name": "connections_list",
       "description": "Which connections this client was granted. An empty list is a real answer."
     },
     {
-      "name": "omatic_guide",
-      "description": "Documentation this server hands out about itself. topic='operating' (default) is the operating guide: the full tool list, how to start a factory, how retrieval is governed, and what a refusal means. topic='architecture' is the architecture description in industry terms. topic='slate' is the slate.ops/1 operation set. Other topics: templates, project-headquarters, server-closet, upgrade, blueprint, blueprint-architecture, blueprint-acceptance-gate, blueprint-certification, blueprint-install-upgrade, blueprint-postgres, blueprint-components."
+      "name": "db_health_snapshot",
+      "description": "Read-only pgvector/index/connection/vacuum health for a granted connection's own database, combined in ONE call: HNSW index utilization, backend/connection pressure, and per-table autovacuum/dead-tuple health. Distinct from observability_snapshot, which is unrelated Home-network Grafana/Prometheus monitoring, not database health. index_bloat reports physical HNSW index size (pg_relation_size, no extension required) rather than a pgstattuple page-bloat estimate: pgstattuple's index functions cover B-tree/GIN/HASH only, not HNSW, so installing it would not add HNSW bloat measurement -- confirmed against current PostgreSQL and pgvector documentation, not assumed."
     },
     {
-      "name": "search",
-      "description": "Semantic retrieval in ONE call: embeds the query on this host and searches the corpus. The vector never leaves the server. Searches CONTENT CHUNKS by default; pass tier='semantic' only for the entity router."
+      "name": "embed_query",
+      "description": "768-d query vector in the corpus vector space. Prefer `search` \u2014 it does this internally and never puts the vector on the wire."
     },
     {
-      "name": "task_relationships",
-      "description": "Which unfinished tasks are tied together, and which lanes each group touches. Links: 'cited' (names another by #number) and 'similar' (inferred). Pass task_id for that task's blast radius."
+      "name": "factory_owner_ddl",
+      "description": "Provisioning-level DDL/role administration over this server's own connection -- no SSH, no operator running psql by hand. Only reachable on a connection that has explicitly configured owner_dsn; refuses otherwise, the same shape as an ungranted connection. Requires confirm_owner=true and a reason (>=8 chars, hashed into the audit log, never stored in the clear). Snapshots the non-system schema/table/view map before and after and returns the diff. It does not replace the factory's own full database ownership through factory_query. Ordinary factory schema work runs as that factory's own database login.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm factory owner ddl",
+          "body": "Allow o-MATIC Server to run `factory_owner_ddl`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
     },
     {
-      "name": "task_duplicate_check",
-      "description": "CALL BEFORE INSERTING INTO factory.tasks. Embeds the draft task and returns closest existing tasks with similarity. verdict: likely_duplicate, related, or no_close_match. Names candidates; does not decide."
+      "name": "factory_query",
+      "description": "Run one SQL statement against a granted connection, including DDL, writes, and destructive operations. PostgreSQL privileges and constraints apply; the factory's LLM login owns its isolated database. confirm_destructive is accepted for older clients but does not gate execution. Database errors return SQLSTATE only \u2014 the message is withheld because it can quote values from the failing row.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm factory query",
+          "body": "Allow o-MATIC Server to run `factory_query`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
     },
     {
-      "name": "slate_entity_search",
-      "description": "Search Factory systems of record a canvas element may be bound to: tasks, decisions, objectives and services, within the granted factory's tenant. Use returned id (e.g. task:509) as entity_id of a binding proposal."
+      "name": "factory_web_publish",
+      "description": "Publish one full, versioned release of THIS factory's static site (HTML/CSS/JS/static assets only) to /srv/omatic-web/<factory_id>/ -- factory_id is resolved server-side from `connection`, never taken from an argument, so no argument can target another factory's directory. Every file is validated (path allowlist, extension allowlist, a real parse/balance check for HTML/CSS/JS, size caps, no executable bit) into a fresh release directory BEFORE `current` moves; the activation is one atomic symlink swap, so a validation failure never publishes a partial tree and the previous release stays live and rollback-able. No shell, no arbitrary filesystem writes, no symlink writes. Every publish and every refusal is recorded in factory.factory_change_ledger. Full reference: omatic_guide(topic=\"web\").",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm factory web publish",
+          "body": "Allow o-MATIC Server to run `factory_web_publish`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
     },
     {
-      "name": "slate_entity_verify",
-      "description": "Confirm one entity still exists in its Factory system of record and return it with a verification stamp. Unresolvable id returns verified=false; nothing is invented."
+      "name": "factory_web_rollback",
+      "description": "Repoint `current` at the previous release -- one atomic symlink swap, no re-upload. destructiveHint is true: it moves what every visitor to this factory's site sees. Refuses with reason_code no_previous_release when no prior release is recorded and present on disk. Rollback is a TOGGLE: calling it twice returns to the version active before the first call. Every rollback and every refusal is recorded in factory.factory_change_ledger.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm factory web rollback",
+          "body": "Allow o-MATIC Server to run `factory_web_rollback`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "factory_web_status",
+      "description": "Read-only. Reports the active deployment version, a checksum recomputed fresh from disk (sha256 of a sorted per-file sha256 manifest, the same convention build/make-bundle.sh uses for the release tarball), the publish timestamp, the active path, and the rollback_target factory_web_rollback would move to (null if there is none). Never writes a file or the ledger."
+    },
+    {
+      "name": "kernel_delegate",
+      "description": "System 5.7.1 only. Probot assigns bounded specialist work inside the active resident kernel. This records work scope, not tool authority or private context.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm kernel delegate",
+          "body": "Allow o-MATIC Server to run `kernel_delegate`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "kernel_plan_update",
+      "description": "System 5.7.1 only. Rewrite the resident kernel's plan summary as the work actually changes. kernel_session_open only ever fills an EMPTY plan, so without this call the kernel was write-once at startup and recorded the one moment when nothing had happened yet. Replaces the summary; stores no tools, credentials or private context.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm kernel plan update",
+          "body": "Allow o-MATIC Server to run `kernel_plan_update`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "kernel_return",
+      "description": "System 5.7.1 only. Return a bounded delegation to resident Probot with compact evidence, artifact, risk, and next-step summaries. Any ACTIVE roster role named as a delegation's target may close that delegation; it grants no new authority. A delegation opened by an EARLIER kernel of the same authenticated client (after a restart or kernel rollover) is returnable too; the result names the kernel that closed it. Another client's delegation is refused.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm kernel return",
+          "body": "Allow o-MATIC Server to run `kernel_return`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "kernel_session_get",
+      "description": "System 5.7.1 only. Read this conversation's compact resident kernel as an active roster role. An absent session is an honest result, not a license to invent factory context."
+    },
+    {
+      "name": "kernel_session_open",
+      "description": "System 5.7.1 only. Open or rejoin the resident Probot/Fred/Data kernel for this conversation. It stores only a compact plan summary and never transfers tools, credentials, approvals, or private context. Returns `continuity`, exactly one of: bound (this key was already an alias of a live kernel), adopted (no key match; a keyless reconnect of the same client rejoined a DIFFERENT live kernel), superseded (this key's own kernel had expired -- it was closed, replaced, and its plan carried forward into the replacement), or opened (nothing existed for this key; a genuinely new kernel). THIS CALL ONLY FILLS AN EMPTY PLAN and never overwrites an authored one. It now says so: `written` is false and `plan_write` is \"refused\" when the plan you sent was not stored, and the returned plan_summary is then the RETAINED plan, not yours. To CHANGE an authored plan, call kernel_plan_update.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm kernel session open",
+          "body": "Allow o-MATIC Server to run `kernel_session_open`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "ladder_pull",
+      "description": "RETIRED 2026-09-28 (decision #660, task #992 S3b). The ladder no longer travels between databases as rows: it ships in each o-MATIC Server release, and `install/migrate.sh --database <name> --ladder-only` brings a factory to it. This tool touches no database and answers with that instruction. Use ladder_status to see how a factory compares with the ladder this release shipped.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm ladder pull",
+          "body": "Allow o-MATIC Server to run `ladder_pull`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "ladder_shadow_evaluate",
+      "description": "Runs the checklist probe definitions packaged with this Server release through the named, granted factory connection. It does not read or write local checklist tables, does not persist results, and is not a certification or health-sweep result. Estate-wide checks are marked N/A until the Server host evaluator exists. Use only to measure the migration bridge; local checklist definitions and existing consumers remain authoritative until parity, evidence storage, certification continuity, and all consumer migrations pass."
+    },
+    {
+      "name": "ladder_status",
+      "description": "Every answer carries `release_ladder` (task #992 S3b): MATCHES or DIFFERS against the ladder THIS server release shipped, every difference named, and the one command that repairs it (install/migrate.sh --ladder-only). That is the reference now (decision #660). Also: Report one factory's live convergence verdict against Commons, the canonical ladder home (task #823, decisions #552/#555). Computes the factory's current manifest and asks Commons's own gate-read function whether it matches canonical content right now -- returns converged or drifted, never invented locally. Not read-only: the reachable path causes Commons to upsert its one row for this factory in ladder.convergence_registry, as a recorded side effect of the check, not a write to any table this call's own argument names. If Commons cannot be reached, this never fabricates a verdict -- it reports state=DEGRADED from the factory's own read-through cache (ladder.v_convergence_cache_status) with the cache's real age. BLOCKED is not a value this tool can return; that vocabulary does not exist in the cache view. Every non-refused answer also carries `kernel` (tasks #849/#867), computed first and independently of convergence: `kernel.floor.verdict` is AT_FLOOR / BELOW_FLOOR / NO_FLOOR / UNKNOWN against the min_kernel_version Commons's payload declares, with the local version read from both ladder.pull_kernel and fn_kernel_version() and their agreement; `kernel.engine_instrument.state` is PRESENT AND READABLE / PRESENT BUT UNREACHABLE / ABSENT / UNMEASURED for ladder.v_kernel_engine_drift, measured by a real SELECT as the factory role (never to_regclass); `kernel.engine_verdict` rolls its rows up to ALL_MATCHED / DRIFTED / UNMEASURED. `kernel.floor.green` requires AT_FLOOR and not behind the publisher's current kernel."
+    },
+    {
+      "name": "module_install",
+      "description": "Administrators only. Queues the install of ONE add-on module by its slot id (docling, advanced-logic, mom). The server only writes a request; a separate root worker on the host does the work from the o-MATIC package repository. The caller must be a signed-in person whose account tier is admin (a service credential or a non-admin person is refused with person_required or admin_tier_required). Every call is audited before the request is written, and a call that cannot be audited is refused. Answers module_install_state=queued with a job_id, or refused with a reason_code (admin_tier_required, person_required, unknown_module, already_installed, already_in_progress, spool_unavailable, audit_unavailable). Progress and the reason for a failure are in module_status.catalog. Reference: docs/MODULES.md.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm module install",
+          "body": "Allow o-MATIC Server to run `module_install`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
     },
     {
       "name": "module_status",
-      "description": "Read-only. Reports add-on modules this server manages (installed, running, healthy, tier), which capabilities have a provider, and any module package discovery refused. Starts and changes nothing."
+      "description": "Read-only. Reports the add-on modules this server manages (installed, running, healthy, tier), which capabilities (document.extract, language.explain, language.advise) have a provider right now and why not when none does, and any module package discovery refused. The server detects modules by itself and works without any: with no module agent on the host it answers module_state=no_agent and every capability unavailable; if the agent exists but could not be asked it answers module_state=agent_unreachable (state NOT measured, not an all-clear). It starts and changes nothing. Reference: docs/MODULES.md."
+    },
+    {
+      "name": "module_uninstall",
+      "description": "Administrators only. Queues the removal of ONE installed add-on module by its slot id. The module's data and configuration are kept. Same rules, same refusals and the same audit as module_install; refused with not_installed when the module is not installed. Reference: docs/MODULES.md.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm module uninstall",
+          "body": "Allow o-MATIC Server to run `module_uninstall`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "mom_compliance_posture",
+      "description": "Read MoM's current evidence posture, evidence timestamps, and coverage gaps. This is evidence reporting, not a certification claim."
+    },
+    {
+      "name": "mom_network_inventory",
+      "description": "Read the shared managed-device and connected-device inventory. It carries the same connection and coverage boundaries shown to the human operator."
+    },
+    {
+      "name": "mom_signal_append",
+      "description": "Append a batch of per-device signal readings to MoM's own history table (mom.device_signal_history) -- the governed replacement for the collector's old direct write (task #1068). INSERT-only and all-or-nothing: one bad row refuses the whole batch and nothing is written. Columns are an allowlist (an unknown key, including id or collected_at, is refused); required: source_vendor, site, device_mac, observed_at; signal_dbm an integer from -130 to 0; observed_at ISO-8601 with an offset, not in the future; at most 500 rows per call. Needs a read_write grant to the MoM connection. Refusals return mom_state=refused with a reason_code (batch_empty, batch_too_large, unknown_column, missing_required, value_invalid, row_not_object, rows_invalid, not_mom_database, ingest_role_unavailable, audit_unavailable). A resend of rows already stored is skipped (deduplicated on device_mac + observed_at + source_vendor) and reported as duplicates_skipped. Every call is audited by batch digest and count, never by row content, and an append that cannot be audited is rolled back. Reference: docs/MANAGE_O_MATIC.md.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm mom signal append",
+          "body": "Allow o-MATIC Server to run `mom_signal_append`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "mom_summary",
+      "description": "Read the current summary from the installed Manage-o-Matic network management and monitoring layer. This is the same measurement used by the human desk. Returns MEASURED, DEGRADED, or UNMEASURED with source and observation time."
+    },
+    {
+      "name": "mom_trends",
+      "description": "Read the MoM network trend series. The caller supplies no PromQL, URL, or monitoring credential."
+    },
+    {
+      "name": "observability_snapshot",
+      "description": "Read-only current Home-network monitoring summary from the configured local Grafana and Prometheus surface. Returns Grafana health, scrape-target status, Nebula API/firmware/device/license state, and OPNsense interface error rate. No caller-supplied URL, query, credentials, or write operation is accepted."
+    },
+    {
+      "name": "ocr_folder_process",
+      "description": "Governed OCR (task #884). Runs the configured OCR runner (RapidOCR on ONNX Runtime) over every eligible file in a NAMED intake folder from server config -- `folder` is a name such as proposals_ocr, never a path. Images (png/jpg/tif/bmp/webp) and scanned PDFs. Originals are hashed before and after and never modified. Output goes only to that folder's configured output directory, in a new per-run directory: a .txt and .ocr.json sidecar per file plus manifest.json. Returns processed files (page count, mean confidence, source sha256, engine and model versions, timestamps, sidecar paths), skipped files with reasons (unsupported_type, symlink, file_too_large, run_*_limit), errors, and the manifest path. Refused unless the folder is granted to this factory (and, if configured, this client). Unconfigured: returns reason_code ocr_not_configured. Details: omatic_guide(topic=\"ocr\"). Choose the path with `engine`: reader (the Reader module only: Office, PDF, images, HTML; a Reader failure is an error, never a quiet fallback), ocr (RapidOCR only: images and PDFs, the Reader is never called), vision (read-only inventory of files and page counts; read pages with vision_page_get), all (Reader plus RapidOCR, the default). The Reader reads images and PDFs with its own OCR, so reader and ocr do not produce identical text for the same scan.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm ocr folder process",
+          "body": "Allow o-MATIC Server to run `ocr_folder_process`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "ocr_result_get",
+      "description": "Read-only (task #884). Returns the manifest of one ocr_folder_process run, and with `file` that file's extracted text (capped at 200,000 characters). Same folder and factory grants as ocr_folder_process; read_only clients are allowed."
+    },
+    {
+      "name": "omatic_guide",
+      "description": "Documentation this server hands out about itself. topic='operating' (default) is the operating guide: the full tool list, how to start a factory, how retrieval is governed, and what a refusal means. topic='architecture' is the architecture description in industry terms \u2014 the three-tier vector memory model, the embedding contract, hybrid retrieval by reciprocal rank fusion, the governance and grant model, the audit trail, and the known gaps. Read 'architecture' when you need to explain or evaluate this system rather than operate it. topic='slate' is the slate.ops/1 operation set: every operation slate_proposal_create accepts, its required and optional arguments, and every reason_code it can refuse with. Read 'slate' before composing a proposal. topic='templates' lists the page templates the server ships; 'project-headquarters' and 'server-closet' explain those two pages; 'upgrade' is the recipe book for a factory upgrade that did not come out clean. 'blueprint' is the factory Blueprint (how a factory is built, governed, certified, installed and upgraded); read it before changing a factory, and 'blueprint-install-upgrade' before fixing an upgrade."
+    },
+    {
+      "name": "persona_attest",
+      "description": "System 5.8 only. Issue one short-lived, server-signed persona-identity claim for an explicitly bound, active roster persona. Cheaper than roster_attest: no audience role, no nonce to consume -- mint it often, once per persona per working session is the expected shape. Pass the returned `claim` back to a tools/call as arguments._persona_claim to have factory.fn_dispatch_policy_check evaluate that call's lane-cap authorization before it runs. Proves WHICH persona a bound client is acting as; grants no tool or table access by itself.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm persona attest",
+          "body": "Allow o-MATIC Server to run `persona_attest`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_append",
+      "description": "Adds 1 to 100 base64 attachments (each at most 50 MiB, the request at most 200 MiB) to a batch that ALREADY exists in the file vault (batch_not_found otherwise: proposal_vault_transfer_batch creates a new one). Files are selected by the same rule as ingest and transfer_batch: a type the vault does not admit, an extraction product (*.extracted.*) or a packet-manifest.json is listed under `skipped` in the answer and in the manifest, never added. Each file is copied and verified by SHA-256, then a NEW sibling manifest `custody-manifest.append-<UTC timestamp>-<n>.json` records them; the original custody-manifest.json and every earlier manifest are never rewritten. A name that already exists in the batch with OTHER bytes is refused (exists); with the SAME bytes it is `already_present` only if an earlier manifest recorded THOSE bytes for that name (otherwise exists, with a custody_mismatch warning). A file no manifest records (an orphan) is adopted only when the custody log holds an append record that named it, or an ADMINISTRATOR sends adopt_orphans=true (orphan_not_adoptable, adopt_orphans_requires_admin otherwise). A reserved name (the two custody manifest shapes, any dot component) is refused reserved_name, a name the vault cannot handle later (backslash, control character, trailing space or dot, over 255 bytes a name or 1024 a path) bad_path, a symlink on the path symlink_refused, a name repeated in the request duplicate_in_request; all are checked before the first byte is written. Any granted writer may append to any batch (append is not folder-scoped). A folder with no original custody manifest needs `adopt=true` (adopt_required) and is marked adopted in the manifest. Audited FIRST (audit_unavailable), and a pending record naming the planned files and their sha256 is written to the custody log BEFORE the first byte is published (custody_write_failed refuses). If it stops part-way (or the server is killed), what was published is recorded in an incomplete manifest and the answer is append_incomplete with `published` and `unwritten`; send the SAME request again and it resumes. For a large file use proposal_vault_upload_start with append=true. Any granted read_write client.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault append",
+          "body": "Allow o-MATIC Server to run `proposal_vault_append`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_delete",
+      "description": "Any client granted the vault with write permission. Moves ONE vault file to the server's trash, a sibling of the vault root that list and ingest never see, with a manifest row (original path, sha256, size, actor, time). Nothing is copied or destroyed: proposal_vault_restore puts it back, and proposal_vault_purge removes it permanently once it is old enough. The audit record is written FIRST; if it cannot be, the call is refused with audit_unavailable and nothing moves. Refuses a symlink, a path outside the vault, a folder and a trash on another filesystem. Reason codes: not_authenticated, read_only, bad_path, not_found, symlink_refused, not_a_file, audit_unavailable, cross_device, trash_move_failed, trash_write_failed, changed_during_delete, protected_custody_file (custody manifests, hidden metadata and the audit log are never deletable), delete_rate_exceeded (200 per client per hour), proposal_vault_not_configured.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault delete",
+          "body": "Allow o-MATIC Server to run `proposal_vault_delete`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_get",
+      "description": "Read-only. Returns one original (at most 50 MiB) as base64 with its SHA-256, hashed before and after the read so a file that changed mid-read is refused. `file` is relative to the vault root. A symlink anywhere on the path is refused, and the server's own folders at the vault root are not served (not found)."
+    },
+    {
+      "name": "proposal_vault_ingest",
+      "description": "Copies one NAMED batch folder from the configured operator drop (proposal_vault.ingest_root) into the vault, verifies every file by SHA-256 and writes custody-manifest.json. Refuses if the batch already exists in the vault; never overwrites, never deletes the source. Files whose type the vault does not admit are listed under `skipped`, never dropped silently. `append=true` adds the drop's files to an EXISTING vault batch instead (reason_code batch_not_found when there is none; exists when a name is taken with other bytes; adopt_required when that folder has no original manifest), recorded in a new custody-manifest.append-*.json. A reserved name, a symlink, a type the vault does not admit and an extraction product are listed under `skipped`.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault ingest",
+          "body": "Allow o-MATIC Server to run `proposal_vault_ingest`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_list",
+      "description": "Read-only. Lists the files in the configured file vault, or in one packet folder of it, with bytes and (by default) SHA-256 for each. `hashes=false` skips the SHA-256 and reads no file body at all: use it to look around a large vault. Custody manifests (custody-manifest.json and every custody-manifest.append-*.json) are listed; the server's own folders at the vault root (the custody event log, the failure records) are not. A symlink is never followed or listed. ONE audit line is written per call, with a count. `packet` is a folder relative to the vault root, never an absolute path. Refused unless the vault is configured for this connection and this client was granted it. Unconfigured: reason_code proposal_vault_not_configured."
+    },
+    {
+      "name": "proposal_vault_organize",
+      "description": "Moves or renames ONE file in the file vault to a new vault-relative path, creating missing folders. Any client granted the vault with write permission (not read_only) may use it, to any folder in the vault. The customer boundary is on the data: a file never moves into a batch recorded for a different customer (customer_mismatch), and a file that has a customer never moves to a place that records none (the vault root, a folder with no custody manifest, a batch with no customer); a file with no customer recorded moves freely except into a batch that has one. The customer is the one named at intake (the `customer` argument of transfer_batch, ingest, upload_start and append), never guessed from a folder name. It never overwrites (exists), never follows a symlink (symlink_refused), never leaves the vault (bad_path), never crosses a filesystem (cross_device), and never touches the vault's own metadata: custody manifests (custody-manifest*), names with a dot component, the server's own folders and the audit log (protected_custody_file for a source, reserved_name for a destination). Audited FIRST: if the audit record cannot be written the call is refused (audit_unavailable) and nothing moves. The move is recorded (from, to, sha256, size, actor and persona, time) in the vault's append-only custody event log, crash-safe: an interrupted move is settled on the next call BY HASH (a file with other bytes at the destination is flagged organize_mismatch in `warnings`, never marked done). No custody manifest is edited. To undo, organize the file back (`undo` in the answer). `reason` is recorded as its sha256 and length ONLY; the text is never written to any log (it can hold PHI), so keep a ticket id out of it and in your own ticketing system. Reason codes: not_authenticated, not_granted, wrong_connection, read_only, password_change_pending, customer_mismatch, bad_path (a name the vault cannot handle later is refused at creation), bad_reason, same_path, not_found, not_a_file, symlink_refused, exists, parent_not_directory, cross_device, protected_custody_file, reserved_name, audit_unavailable, custody_write_failed, custody_log_unreadable, move_failed, changed_during_move, proposal_vault_not_configured.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault organize",
+          "body": "Allow o-MATIC Server to run `proposal_vault_organize`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_purge",
+      "description": "Person-bound administrators only (a service credential is refused admin_required). PERMANENT. Removes trash entries older than the minimum age (7 days by default, configurable, never under 1 hour; a call may raise it, never lower it), at most purge_cap (50) per call. DRY RUN by default: it lists what it would remove, including the OCR output and staged copies derived from the same sha256, but only when no other copy of that content exists. It acts only with dry_run=false AND confirm=true AND the plan_token the dry run returned (60 minutes, once). Per client: 100 items per rolling 24 hours (purge_budget_exceeded). A purge that leaves anything server-owned behind ends purged_with_residue. Even a dry run is not read-only: like the listing it first settles any half-done delete or restore. Each purge writes a tombstone (sha256, size, original path, time, actor) for Data, and reports what it removed and what it could NOT reach: evidence rows, embeddings and ledger rows belong to Data. Audited first; audit_unavailable refuses with nothing removed.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault purge",
+          "body": "Allow o-MATIC Server to run `proposal_vault_purge`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_put",
+      "description": "Compatibility name for proposal_vault_transfer_batch; same arguments, same result.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault put",
+          "body": "Allow o-MATIC Server to run `proposal_vault_put`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_restore",
+      "description": "Any client granted the vault with write permission. Moves a trashed file back to its original path after re-checking its sha256 against the manifest. Refuses (destination_exists) if the original path is occupied; it never overwrites. Audited first, like delete.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault restore",
+          "body": "Allow o-MATIC Server to run `proposal_vault_restore`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_stage",
+      "description": "Copies one original into the inbox of the OCR folder the vault is configured for (proposal_vault.ocr_folder), then run ocr_folder_process on that folder. Accepts every type an installed engine accepts (the types declared by the installed document modules' recorded manifests, plus the image and PDF types RapidOCR reads); anything else is refused with reason_code unsupported_type, which names the accepted types. Two files with the same name and different bytes are both staged: the second under a name that carries the first 8 hex of its sha256 (`staged_file` says which). Copy only: the original is hashed before and after and never modified. Needs a read_write client and the OCR folder's own grants.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault stage",
+          "body": "Allow o-MATIC Server to run `proposal_vault_stage`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_transfer_batch",
+      "description": "Receives 1 to 100 attachments as base64 (each at most 50 MiB, the batch at most 200 MiB) and publishes them as one new vault batch with a verified custody-manifest.json. `batch` defaults to a timestamped intake name. A large file can be truncated in transit inside one request: use proposal_vault_upload_start / _chunk / _commit for those.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault transfer batch",
+          "body": "Allow o-MATIC Server to run `proposal_vault_transfer_batch`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_trash_list",
+      "description": "Any client granted the vault with write permission (same gate as proposal_vault_delete). Lists trash entries with item_id, original path, sha256, size, who deleted it and how (person or client), age, and whether purge would accept it now. state: in_trash (default), restored, purge_pending, purged or all. NOT read-only: before it answers it settles any delete or restore a crash left half done, which appends a custody event to the trash log and a line to the audit log (a listing with nothing pending writes nothing)."
+    },
+    {
+      "name": "proposal_vault_upload_chunk",
+      "description": "Appends one chunk (base64, at most 1 MiB decoded) at exactly `offset`, the next_offset the previous call returned, verified against `chunk_sha256`. A retry after a lost reply asks again with the offset the server reports.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault upload chunk",
+          "body": "Allow o-MATIC Server to run `proposal_vault_upload_chunk`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_upload_commit",
+      "description": "Verifies the complete upload against its declared whole-file SHA-256 and publishes it into the vault with a custody-manifest.json. Refuses an incomplete upload, a hash mismatch, or an existing destination; never overwrites.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault upload commit",
+          "body": "Allow o-MATIC Server to run `proposal_vault_upload_commit`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "proposal_vault_upload_start",
+      "description": "Opens a resumable upload for one file (at most 50 MiB): declare its size and whole-file SHA-256, then send it in chunks of at most 1 MiB with proposal_vault_upload_chunk (or raw HTTP PUT to /proposal-vault/uploads/<upload_id>), then proposal_vault_upload_commit. `append=true` (with `batch` required) adds the file to an EXISTING batch at commit time and records it in a new custody-manifest.append-*.json; the batch must exist and the name must be free (or hold the same bytes: a retry resumes), the type must be admitted, and `adopt=true` is needed when the folder has no original manifest. A reserved name (custody-manifest*, a dot component) is refused reserved_name.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm proposal vault upload start",
+          "body": "Allow o-MATIC Server to run `proposal_vault_upload_start`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "retrieval_tune",
+      "description": "Memory tuning (task #1022). The search functions fuse a keyword rank and a vector rank with RRF constant k (default 60). action='status' (read-only, the default): the k in force for each search tier and the last tuning run. action='run': sweep candidate k values (and the reranker, recorded as evidence only) against this factory's gold set (factory.retrieval_eval_cases; include_shipped_labels=true adds the reviewed labels shipped in acceptance/relevance-labels.json), calling the real search functions with every call rolled back, score recall@5/recall@10/MRR/nDCG@10, and RECORD the run in factory.retrieval_tuning_runs/_scores. It changes no setting. action='apply' with run_id: write that run's recommendation into factory.retrieval_tuning, which the search tool reads from then on. With no applied row the function default stands. Needs a read_write grant for run and apply. connection defaults to this server's own factory.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm retrieval tune",
+          "body": "Allow o-MATIC Server to run `retrieval_tune`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "roster_attest",
+      "description": "System 5.7 only. Issue one short-lived, server-signed roster attestation for an explicitly bound active role and evaluated adapter. A role name, prompt, or package manifest is never proof. Unsupported factories fail safely.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm roster attest",
+          "body": "Allow o-MATIC Server to run `roster_attest`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "roster_verify_handoff",
+      "description": "System 5.7 only. Verify a same-factory roster attestation and atomically consume its nonce. Returns a recognition state and opaque evidence reference; it never grants tools, credentials, approvals, or private context."
+    },
+    {
+      "name": "search",
+      "description": "Semantic retrieval in ONE call: embeds the query on this host and searches the corpus. The vector never leaves the server. Use this instead of embed_query followed by a hand-built SQL call. Searches the CONTENT CHUNKS by default; pass tier='semantic' only when you want the entity router rather than an answer."
+    },
+    {
+      "name": "slate_asset_get",
+      "description": "Read one bounded Slate asset only after the server checks the caller's selected factory grant and tenant boundary. Address it by asset_id, or by the (canvas_id, file_id) pair an Excalidraw image element actually carries."
+    },
+    {
+      "name": "slate_asset_put",
+      "description": "Store one binary canvas asset up to 5 MiB behind the selected factory grant. The returned SHA-256 is content integrity evidence, not a malware verdict.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm slate asset put",
+          "body": "Allow o-MATIC Server to run `slate_asset_put`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "slate_canvas_create",
+      "description": "Create a tenant-bound Slate canvas and immutable revision 1. Canvas history is server-owned; the caller supplies no tenant, SQL, filesystem path, or credential.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm slate canvas create",
+          "body": "Allow o-MATIC Server to run `slate_canvas_create`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "slate_canvas_open",
+      "description": "Read the current Slate canvas or one retained immutable revision, only within the selected granted factory. With no narrowing arguments the whole scene comes back under `scene` -- what slate_revision_commit round-trips. ASK FOR PART OF A LARGE SCENE with element_ids / element_types / fields / offset / limit / include_files: the result then arrives under `scene_projection`, `scene` is null, and `projection` states the full element count and how many elements were withheld. That is deliberate -- a partial scene committed as a whole one would delete everything it omitted. `fields:[\"type\"]` is a cheap id/type index."
+    },
+    {
+      "name": "slate_entity_search",
+      "description": "Search the Factory systems of record a canvas element may be bound to: tasks, decisions, objectives and services, within the granted factory's own tenant. These are authoritative records, not a demo list. Use the returned `id` ('task:509') as the entity_id of a binding proposal."
+    },
+    {
+      "name": "slate_entity_verify",
+      "description": "Confirm one entity still exists in its Factory system of record and return it with a verification stamp. An unresolvable id returns verified=false; nothing is ever invented, and a binding cannot be made without this."
+    },
+    {
+      "name": "slate_proposal_approve",
+      "description": "A PERSON approves one proposal. The server decides whether you are a person from how this session authenticated -- there is no actor argument to assert -- and an agent-class caller is refused. The proposing agent can never decide its own proposal, the expected revision must still be the canvas head, and every outcome appends to the factory change ledger. Approving a binding writes the server's binding record, which is what makes that element's `bound` state provable afterwards.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm slate proposal approve",
+          "body": "Allow o-MATIC Server to run `slate_proposal_approve`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "slate_proposal_create",
+      "description": "Record a REVIEWABLE PROPOSAL against one canvas revision. THIS IS NOT AN EDIT: nothing on the canvas changes, no promotion state moves, and no binding is created. The server computes the diff your operations would produce and stores it with the proposal, so a person sees exactly what would change before anything does. Refused before anything is written when the expected revision is not the head, a target id is not on that revision, an element is locked, or a binding names an entity that does not resolve. A person then approves or rejects it; you cannot approve your own.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm slate proposal create",
+          "body": "Allow o-MATIC Server to run `slate_proposal_create`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "slate_proposal_list",
+      "description": "Read proposals on one canvas with their server-computed previews and decisions. Every target is named by a human-legible descriptor (label, shape, colour, containing region, position) alongside its raw id, and `uncertainty_detail` says WHAT specifically is uncertain, so a proposal can be decided here without opening the canvas. Use it before proposing so you do not re-propose what is already queued."
+    },
+    {
+      "name": "slate_proposal_reject",
+      "description": "A PERSON rejects one proposal. Same actor rules as approval. The record is kept and marked rejected, never deleted, and nothing on the canvas changes -- a proposal was never an edit.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm slate proposal reject",
+          "body": "Allow o-MATIC Server to run `slate_proposal_reject`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "slate_revision_commit",
+      "description": "Append a Slate canvas revision using optimistic concurrency. A stale expected revision returns a conflict and preserves both the server head and history. SEND THE WHOLE SCENE, or omit `scene` for a DELTA COMMIT and the server applies the operation set to the head revision itself (an agent's operations come from the proposal a person approved, never from the call). WHO MAY MOVE THE HEAD: a human-class principal commits directly. An AGENT is refused (`human_actor_required`, nothing written) unless it cites `proposal_id` for a proposal a person approved against the current head. Having created the canvas is NOT authority. Actor kind is derived from the authenticated principal; there is no argument that can assert it.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm slate revision commit",
+          "body": "Allow o-MATIC Server to run `slate_revision_commit`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "slate_revision_restore",
+      "description": "Restore a retained revision by appending it as a new canvas head. This MOVES THE CANVAS BACKWARDS: the current head's content is no longer what the canvas shows. Historic revisions are never overwritten or deleted, so it is reversible by restoring forward again. Human-decided: an agent is always refused, because there is no proposal route for a restore. A person restores a canvas.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm slate revision restore",
+          "body": "Allow o-MATIC Server to run `slate_revision_restore`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "slate_scene_observe",
+      "description": "THE AGENT'S VIEW OF A CANVAS. One call returns the dual context: the rendered view where one exists AND the normalized scene, with revision, head, selection, viewport, your own actor identity as the server authenticated it, pending proposals, proved bindings, a DERIVED read (containment, connector adjacency, duplicate labels) so you need not recompute geometry yourself, and the uncertainty warnings a picture hides: invisible, locked, malformed, unsupported, clipped and fully offscreen elements, images whose fileId resolves to nothing, and connectors that are stale, HALF-BOUND or attached to NOTHING AT ALL. Pass projection='compact' for the projected element set (identity, geometry, label, region, connector ends) when a scene is too large to read whole. Read `completeness` first: it is 'dual' ONLY when a rendered view for THIS revision is present, and 'scene-only' otherwise. NEITHER HALF IS EVER SILENTLY TREATED AS COMPLETE. Promotion states reported here are the states the server can PROVE from its own records; where the stored scene claims more, both are shown."
+    },
+    {
+      "name": "startup",
+      "description": "START HERE. One round trip: the connections this client was granted AND the factory's startup card (identity, corpus, retrieval state, roster, governance, open work, READY/DEGRADED/BLOCKED with a reason). Replaces calling connections_list and then factory_query, which cost two round trips at ~4.5s each. Omit `connection` when exactly one is granted; with several, it returns the list and asks rather than guessing which factory you meant. Read `state` first and believe nothing else until it passes; `unmeasured` names fields this factory genuinely cannot report, which is not the same as zero. PASS `conversation_key`: startup opens this conversation's resident kernel, and without a key it can only address one by guessing -- it will join an existing kernel but will not create one, and the card reports DEGRADED."
+    },
+    {
+      "name": "task_duplicate_check",
+      "description": "CALL BEFORE INSERTING INTO factory.tasks. Embeds the draft task (title and description) on this host with the same ONNX model that embeds every stored task, and returns the closest existing tasks, open and closed, with similarity and how far each stands above the draft's own neighborhood (z). verdict: likely_duplicate (update that task instead, or say in the new one why it differs), related (cite it by #number), or no_close_match. It names candidates; it does not decide. Wording cannot see an umbrella task that absorbed this work, so read the matches. The server also flags likely duplicates automatically when a new task is embedded. connection defaults to this server's own factory."
+    },
+    {
+      "name": "task_relationships",
+      "description": "Which unfinished tasks are tied together, and which lanes each group touches -- the Control Room's Deck Director (section 4) as data. Two kinds of link, kept apart: 'cited' (one task names the other by #number in its own text; high confidence) and 'similar' (worded alike, from factory.task_relationship_candidates; inferred). Groups are built around hub tasks so one heavily cited task does not merge everything. Pass task_id for that task's blast radius (its linked tasks, the lanes they sit in, and the groups that contain it) before planning a fix (SOP-023). connection defaults to this server's own factory."
+    },
+    {
+      "name": "vision_page_get",
+      "description": "Read-only. Returns one page of one file in a NAMED OCR intake folder as an image, for you to read: layout, tables, checkboxes, signatures, stamps, handwriting, anything OCR text loses. No model runs on the server; the page is rendered there (PDF via pdfium, images as they are, long edge at most `max_edge` px, default 1600) and attached to this result. The original is never modified. Same folder and factory grants as ocr_folder_process; read_only clients are allowed. Pair it with ocr_result_get for the text."
+    },
+    {
+      "name": "work_claim_acquire",
+      "description": "Atomically claim one exact factory resource before write-capable work. A conflicting active claim returns already_claimed; this tool never transfers authority or credentials.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm work claim acquire",
+          "body": "Allow o-MATIC Server to run `work_claim_acquire`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
+    },
+    {
+      "name": "work_claim_release",
+      "description": "Release a completed claim. Only the recorded owning role can release it.",
+      "capabilities": {
+        "confirmation": {
+          "type": "AdaptiveCard",
+          "title": "Confirm work claim release",
+          "body": "Allow o-MATIC Server to run `work_claim_release`? This tool can write, mutate, delete, delegate, or execute."
+        }
+      }
     }
   ],
   "runtimes": [
@@ -46,14 +552,74 @@
         "reference_id": "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE="
       },
       "run_for_functions": [
+        "capability_request",
         "connections_list",
+        "db_health_snapshot",
+        "embed_query",
+        "factory_owner_ddl",
+        "factory_query",
+        "factory_web_publish",
+        "factory_web_rollback",
+        "factory_web_status",
+        "kernel_delegate",
+        "kernel_plan_update",
+        "kernel_return",
+        "kernel_session_get",
+        "kernel_session_open",
+        "ladder_pull",
+        "ladder_shadow_evaluate",
+        "ladder_status",
+        "module_install",
+        "module_status",
+        "module_uninstall",
+        "mom_compliance_posture",
+        "mom_network_inventory",
+        "mom_signal_append",
+        "mom_summary",
+        "mom_trends",
+        "observability_snapshot",
+        "ocr_folder_process",
+        "ocr_result_get",
         "omatic_guide",
+        "persona_attest",
+        "proposal_vault_append",
+        "proposal_vault_delete",
+        "proposal_vault_get",
+        "proposal_vault_ingest",
+        "proposal_vault_list",
+        "proposal_vault_organize",
+        "proposal_vault_purge",
+        "proposal_vault_put",
+        "proposal_vault_restore",
+        "proposal_vault_stage",
+        "proposal_vault_transfer_batch",
+        "proposal_vault_trash_list",
+        "proposal_vault_upload_chunk",
+        "proposal_vault_upload_commit",
+        "proposal_vault_upload_start",
+        "retrieval_tune",
+        "roster_attest",
+        "roster_verify_handoff",
         "search",
-        "task_relationships",
-        "task_duplicate_check",
+        "slate_asset_get",
+        "slate_asset_put",
+        "slate_canvas_create",
+        "slate_canvas_open",
         "slate_entity_search",
         "slate_entity_verify",
-        "module_status"
+        "slate_proposal_approve",
+        "slate_proposal_create",
+        "slate_proposal_list",
+        "slate_proposal_reject",
+        "slate_revision_commit",
+        "slate_revision_restore",
+        "slate_scene_observe",
+        "startup",
+        "task_duplicate_check",
+        "task_relationships",
+        "vision_page_get",
+        "work_claim_acquire",
+        "work_claim_release"
       ],
       "spec": {
         "url": "https://factory.o-matic.ai/mcp",

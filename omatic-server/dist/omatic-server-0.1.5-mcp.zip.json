@@ -1,9 +1,9 @@
 {
-  "file": "omatic-server-0.1.4-mcp.zip",
-  "path": "omatic-server/dist/omatic-server-0.1.4-mcp.zip",
-  "version": "0.1.4",
-  "sha256": "663bec66f5d4ce86a34763c4a125331445589e5cc2ba4ee02320aa18d65484dd",
-  "bytes": 10886,
+  "file": "omatic-server-0.1.5-mcp.zip",
+  "path": "omatic-server/dist/omatic-server-0.1.5-mcp.zip",
+  "version": "0.1.5",
+  "sha256": "fc9337ff6b0123a45932469b9ba704e0e0d24124b3549b892d9b42e26ed9d9ab",
+  "bytes": 30435,
   "contents": [
     "manifest.json",
     "mcp-tools.json",
@@ -13,7 +13,7 @@
   "appId": "6799c907-19f2-49a8-826c-4473bc645d59",
   "connectorId": "omaticserver",
   "mcpServerUrl": "https://factory.o-matic.ai/mcp",
-  "builtAt": "2026-11-06T15:39:09.046Z",
+  "builtAt": "2026-11-06T15:51:45.610Z",
   "uploadPath": "Microsoft 365 admin center → Agents → Tools → Registry → Upload",
   "uploadDoc": "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/manage-plugins-skills-mcp-servers",
   "icons": {

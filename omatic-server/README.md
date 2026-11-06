@@ -12,8 +12,8 @@ a remote MCP server; no declarative agent, no instructions, no conversation
 starters.
 
 This Supply package builds the zip an M365 admin uploads so any supported
-Microsoft 365 Copilot experience can call eight pinned read-only tools on
-`https://factory.o-matic.ai/mcp` with Entra SSO.
+Microsoft 365 Copilot experience can call the full live o-MATIC Server MCP
+tool surface on `https://factory.o-matic.ai/mcp` with Entra SSO.
 
 ## What ships
 
@@ -22,8 +22,8 @@ Microsoft 365 Copilot experience can call eight pinned read-only tools on
 | App id | `6799c907-19f2-49a8-826c-4473bc645d59` |
 | Connector id / namespace | `omaticserver` |
 | MCP URL | `https://factory.o-matic.ai/mcp` |
-| Auth | `OAuthPluginVault` (Entra SSO registration `referenceId`, byte-identical to the hand-built package) |
-| Tools | `connections_list`, `omatic_guide`, `search`, `task_relationships`, `task_duplicate_check`, `slate_entity_search`, `slate_entity_verify`, `module_status` |
+| Auth | `OAuthPluginVault` (Entra SSO registration `referenceId`, byte-identical to the hand-built package). Scope is **not** in the zip — see [`docs/OAUTH-SCOPE-FIX.md`](docs/OAUTH-SCOPE-FIX.md) for the AADSTS70011 / App ID URI fix. |
+| Tools | Full live o-MATIC Server MCP surface (**68** tools pinned). Writes use `capabilities.confirmation.type=AdaptiveCard`; reads omit confirmation. See [`docs/TOOL-CLASSIFICATION.md`](docs/TOOL-CLASSIFICATION.md). |
 | Mark | **Backbone** (Jimmy approved 2026-11-06; Brandy + Monet) |
 
 ## Works across Copilot hosts (not Cowork-only)
@@ -34,7 +34,7 @@ Portability choices, from Microsoft's connector docs:
 |---|---|
 | `agentConnectors[].toolSource.remoteMcpServer` | Documented connector registration for hosts that support remote MCP — not a declarative-agent action |
 | `authorization.type: OAuthPluginVault` | Required for Copilot Chat; Cowork alone also allows `None`, which we deliberately reject |
-| Packaged `mcp-tools.json` via `mcpToolDescription.file` | Copilot Cowork still requires a tool-description file even on manifest 1.29+; pinning also keeps the eight read-only tools stable everywhere |
+| Packaged `mcp-tools.json` via `mcpToolDescription.file` | Copilot Cowork still requires a tool-description file even on manifest 1.29+; pinning keeps the full tool surface stable across hosts |
 | Manifest `1.30` | Current Teams/M365 app schema that carries `agentConnectors` |
 | No `copilotAgents` / no skills | Connector-only package — usable wherever connectors are governed, not locked to one agent persona |
 
