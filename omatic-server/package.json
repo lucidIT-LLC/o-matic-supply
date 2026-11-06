@@ -1,0 +1,17 @@
+{
+  "name": "omatic-server-copilot-mcp",
+  "version": "0.1.5",
+  "private": true,
+  "license": "BUSL-1.1",
+  "description": "o-MATIC Server — Microsoft 365 Copilot MCP connector (agentConnectors remote MCP, Entra SSO). Not an agent, not a persona, not Probot. Microsoft admin UI still labels the zip a plugin.",
+  "type": "module",
+  "scripts": {
+    "render-icons": "node scripts/render-icons.mjs",
+    "validate": "node scripts/validate.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/render-icons.mjs && node scripts/validate.mjs"
+  },
+  "engines": {
+    "node": ">=20.10.0"
+  }
+}

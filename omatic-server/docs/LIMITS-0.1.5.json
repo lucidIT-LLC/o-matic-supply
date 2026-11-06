@@ -1,0 +1,387 @@
+{
+  "source": "GetDynamicTools(o-matic-server) + startup.registered_tools; count=68",
+  "included": 68,
+  "excluded": [],
+  "microsoft_constraints": [
+    {
+      "source": "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/plugin-manifest-2.4",
+      "constraint": "No documented hard max on functions[] length. String properties SHOULD be limited to 4K characters.",
+      "status": "ok",
+      "note": "Max function description length in this build: 2222 chars (under 4K)."
+    },
+    {
+      "source": "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/overview-plugins",
+      "constraint": "Soft guidance: response quality may degrade beyond ~10 functions/tools due to token-window limits. Not a hard reject.",
+      "status": "reported",
+      "note": "Pinning all 68 per Jimmy 2026-11-06. Soft quality risk acknowledged; no tools dropped."
+    },
+    {
+      "source": "Teams app schema 1.30 agentConnectors",
+      "constraint": "agentConnectors maxItems: 10",
+      "status": "ok",
+      "note": "This package declares 1 connector."
+    },
+    {
+      "source": "plugin-manifest-2.4 Function.name",
+      "constraint": "name MUST match ^[A-Za-z0-9_]+$",
+      "status": "ok",
+      "note": "All 68 names match."
+    },
+    {
+      "source": "plugin-manifest-2.4 description_for_human",
+      "constraint": "Characters beyond 100 MAY be ignored",
+      "status": "ok",
+      "note": "description_for_human length=49"
+    },
+    {
+      "source": "Real upload validator (Jimmy hard-won)",
+      "constraint": "Every ai-plugin function MUST have a description; confirmation.type None rejected; only AdaptiveCard allowed when present.",
+      "status": "ok",
+      "note": "All functions have descriptions; reads omit confirmation; writes use AdaptiveCard."
+    }
+  ],
+  "read_count": 30,
+  "write_count": 38,
+  "tools": [
+    {
+      "name": "capability_request",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "connections_list",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "db_health_snapshot",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "embed_query",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "factory_owner_ddl",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "factory_query",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "factory_web_publish",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "factory_web_rollback",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "factory_web_status",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "kernel_delegate",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "kernel_plan_update",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "kernel_return",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "kernel_session_get",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "kernel_session_open",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "ladder_pull",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "ladder_shadow_evaluate",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "ladder_status",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "module_install",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "module_status",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "module_uninstall",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "mom_compliance_posture",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "mom_network_inventory",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "mom_signal_append",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "mom_summary",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "mom_trends",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "observability_snapshot",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "ocr_folder_process",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "ocr_result_get",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "omatic_guide",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "persona_attest",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_append",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_delete",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_get",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "proposal_vault_ingest",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_list",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "proposal_vault_organize",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_purge",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_put",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_restore",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_stage",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_transfer_batch",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_trash_list",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "proposal_vault_upload_chunk",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_upload_commit",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "proposal_vault_upload_start",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "retrieval_tune",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "roster_attest",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "roster_verify_handoff",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "search",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "slate_asset_get",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "slate_asset_put",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "slate_canvas_create",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "slate_canvas_open",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "slate_entity_search",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "slate_entity_verify",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "slate_proposal_approve",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "slate_proposal_create",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "slate_proposal_list",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "slate_proposal_reject",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "slate_revision_commit",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "slate_revision_restore",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "slate_scene_observe",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "startup",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "task_duplicate_check",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "task_relationships",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "vision_page_get",
+      "class": "read",
+      "confirmation": "omit"
+    },
+    {
+      "name": "work_claim_acquire",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    },
+    {
+      "name": "work_claim_release",
+      "class": "write",
+      "confirmation": "AdaptiveCard"
+    }
+  ]
+}

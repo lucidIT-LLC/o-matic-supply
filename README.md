@@ -14,10 +14,11 @@ You don't go to a hardware store for a marketing manager, and you don't hire a
 person when what you need is a wrench. o-MATIC Supply is where the equipment
 lives.
 
-| Plugin | What you get |
+| Plugin / package | What you get |
 |---|---|
 | `wordpress@o-matic-supply` | The **WordPress** and **Elementor** MCP connectors — site and content operations, Elementor page building, template and theme work, media handling, and a sandboxed export/import path. |
 | `microsoft-365@o-matic-supply` | The **Team Assistant** MCP connector — governed read/write access to Microsoft Planner (including Goals), Teams channels, SharePoint Lists, and OneNote over Microsoft Graph, with per-user OAuth device-code sign-in and OS-keychain token storage. |
+| `omatic-server/` (Copilot zip) | The **o-MATIC Server** Microsoft 365 Copilot **MCP connector** (not an agent, not Probot). Built zip uploads via M365 admin center **Agents → Tools → Registry → Upload**. See `omatic-server/README.md`. |
 
 ## This pack ships MCP servers — and that is the point
 
