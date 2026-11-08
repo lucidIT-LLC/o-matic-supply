@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.30/MicrosoftTeams.schema.json",
   "manifestVersion": "1.30",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "id": "6799c907-19f2-49a8-826c-4473bc645d59",
   "developer": {
     "name": "lucidIT, LLC (o-MATIC)",
@@ -19,7 +19,7 @@
   },
   "description": {
     "short": "Entra SSO MCP connector for o-MATIC Server factories.",
-    "full": "o-MATIC Server MCP Connector for Microsoft 365 Copilot. Default endpoint is https://factory.o-matic.ai/mcp with Entra SSO (OAuthPluginVault). Exposes the full live MCP tool surface. Connector only — not a declarative agent and not a persona. For a customer factory or other HTTPS MCP URL, rebuild with OMATIC_MCP_URL and OMATIC_OAUTH_REFERENCE_ID (see docs/CUSTOM-MCP.md); Microsoft's agentConnectors schema pins mcpServerUrl in the package with no runtime URL field."
+    "full": "o-MATIC Server MCP Connector for Microsoft 365 Copilot. Default endpoint is https://factory.o-matic.ai/mcp with Entra SSO (OAuthPluginVault). Uses dynamic tool discovery (live tools/list) so Copilot sees every tool the MCP server exposes. Connector only — not a declarative agent and not a persona. For a customer factory or other HTTPS MCP URL, rebuild with OMATIC_MCP_URL and OMATIC_OAUTH_REFERENCE_ID (see docs/CUSTOM-MCP.md); Microsoft's agentConnectors schema pins mcpServerUrl in the package with no runtime URL field."
   },
   "accentColor": "#00B5AD",
   "permissions": [
@@ -32,16 +32,13 @@
     {
       "id": "omaticserver",
       "displayName": "o-MATIC Server MCP Connector",
-      "description": "Default o-MATIC Server MCP endpoint with Entra SSO. Exposes the full MCP tool surface. Rebuild for a custom factory URL (docs/CUSTOM-MCP.md).",
+      "description": "Default o-MATIC Server MCP endpoint with Entra SSO. Dynamic tools/list discovery (all live tools). Rebuild for a custom factory URL (docs/CUSTOM-MCP.md).",
       "toolSource": {
         "remoteMcpServer": {
           "mcpServerUrl": "https://factory.o-matic.ai/mcp",
           "authorization": {
             "type": "OAuthPluginVault",
             "referenceId": "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE="
-          },
-          "mcpToolDescription": {
-            "file": "mcp-tools.json"
           }
         }
       }

@@ -13,8 +13,9 @@ Not a Cowork-only package:
 
 - `OAuthPluginVault` — Copilot Chat requires OAuth; `None` works in Cowork only
   and is refused by our validator
-- Packaged `mcpToolDescription` — Cowork still requires the file on 1.29+;
-  pinning also keeps the full tool surface identical everywhere
+- **Dynamic tool discovery** (0.1.7+, Jimmy) — omit `mcpToolDescription` so the
+  host calls live `tools/list`; ai-plugin source uses `functions: []` and
+  `run_for_functions: ["*"]`
 - Connector-only (`agentConnectors`, no `copilotAgents`, no `agentSkills`) — any
   host that can use a governed connector can attach it; it is not locked to one
   declarative-agent persona
@@ -36,19 +37,22 @@ Source:
 That page points packaging authors to Cowork plugin development for the
 manifest shape used by Registry upload.
 
-## Package shape (connector-only)
+## Package shape (connector-only, dynamic discovery)
 
 Per
 [Build plugins for Copilot Cowork](https://learn.microsoft.com/en-us/microsoft-365/copilot/cowork/cowork-plugin-development)
-— **Connector only (no custom skills)**:
+— **Connector only (no custom skills)** — and
+[Dynamic tool discovery](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/plugin-dynamic-tool-discovery):
 
 ```
 omatic-server-<version>-mcp.zip
-├── manifest.json      # agentConnectors only — no agentSkills, no declarativeAgents
+├── manifest.json      # agentConnectors only — no mcpToolDescription, no agentSkills
 ├── color.png          # 192×192
-├── outline.png        # 32×32
-└── mcp-tools.json     # static tool descriptions for mcpToolDescription.file
+└── outline.png        # 32×32
 ```
+
+`mcp-tools.json` is **not** shipped. `ai-plugin.json` stays in-repo as build/validation
+source (`functions: []`, `run_for_functions: ["*"]`) and is not in the zip.
 
 ## Remote MCP registration
 
@@ -61,8 +65,7 @@ Per
 - `mcpServerUrl` must be HTTPS
 - Auth: `OAuthPluginVault` with `referenceId` (Entra SSO registration id;
   secrets never in the package)
-- Static pinned tools: `mcpToolDescription.file` → `mcp-tools.json`
-  (`tools/list`-shaped JSON)
+- **Omit** `mcpToolDescription` so the host resolves tools from live `tools/list`
 
 App manifest schema:
 `https://developer.microsoft.com/json-schemas/teams/v1.30/MicrosoftTeams.schema.json`
@@ -80,24 +83,22 @@ same runtime facts into `agentConnectors.remoteMcpServer`:
 | `auth.type: OAuthPluginVault` | `authorization.type: OAuthPluginVault` |
 | `auth.reference_id` (byte-identical) | `authorization.referenceId` (same bytes) |
 | `spec.url` | `mcpServerUrl` |
-| `spec.mcp_tool_description.file` | `mcpToolDescription.file` |
-| `run_for_functions` + `functions[]` | **all** live MCP tool names in `mcp-tools.json` + source `ai-plugin.json` (0.1.5+) |
+| `spec.mcp_tool_description` | **omitted** (dynamic discovery) |
+| `functions: []` + `run_for_functions: ["*"]` | no packaged tool file; host uses `tools/list` |
 | `namespace: omaticserver` | connector `id: omaticserver` |
 
-`package/ai-plugin.json` is retained in-repo as the pinned-function /
-`RemoteMCPServer` source of truth and is validated by the real-validator lint
-(every function has a description; no `capabilities.confirmation.type: None`).
-It is **not** referenced by a declarative agent and is **not** required in the
-upload zip for the connector-only shape.
+`package/ai-plugin.json` is retained in-repo as the RemoteMCPServer source of
+truth for apply-config / validate. It is **not** referenced by a declarative
+agent and is **not** in the upload zip.
 
 ## Real-validator lint (hard-won)
 
-Offline `atk validate --manifest-file` and JSON Schema can pass packages that
-Microsoft's upload validator still rejects. This repo also lints:
+Offline `atk validate --manifest-file` and required-field checks can pass
+packages that Microsoft's upload validator still rejects. This repo also lints:
 
-1. Every `ai-plugin.json` function has a non-empty `description`
-2. No `capabilities.confirmation.type` of `None` (omit confirmation for
-   read-only tools; only `AdaptiveCard` is allowed when present)
+1. Dynamic discovery shape: empty `functions`, `run_for_functions: ["*"]`, no
+   `mcpToolDescription` / `mcp_tool_description`
+2. Naming / description length limits and “MCP Connector” rename
 3. No `.svg` files inside the upload zip (SVG suspected; unproven — we keep
    SVGs as sources, render PNGs into the zip)
 

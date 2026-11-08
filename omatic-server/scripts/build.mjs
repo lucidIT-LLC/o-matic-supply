@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * Reproducible build for the o-MATIC Server Copilot MCP connector zip.
+ * Reproducible build for the o-MATIC Server MCP Connector zip.
  *
- * Shape (Microsoft connector-only / Registry upload):
- *   manifest.json, color.png, outline.png, mcp-tools.json
+ * Shape (Microsoft connector-only / Registry upload) — dynamic discovery:
+ *   manifest.json, color.png, outline.png
+ * (no mcp-tools.json — omit mcpToolDescription so the host calls tools/list)
  *
- * Docs cited in docs/STRUCTURE.md.
+ * Docs: docs/STRUCTURE.md, docs/CUSTOM-MCP.md, Learn dynamic tool discovery.
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -36,27 +37,32 @@ function run(cmd, args, opts = {}) {
   return r;
 }
 
-// 1. Apply config.json (+ OMATIC_MCP_URL / OMATIC_OAUTH_REFERENCE_ID) into manifests
+// 1. Apply config (+ env) → dynamic-discovery manifests
 run(process.execPath, [join(root, "scripts/apply-config.mjs")]);
 
 // 2. Render icons from SVG sources
 run(process.execPath, [join(root, "scripts/render-icons.mjs")]);
 
-// 3. Validate sources + rendered icons
+// 3. Validate
 run(process.execPath, [join(root, "scripts/validate.mjs")]);
 
-// 4. Assemble staging dir (zip root = package files only; no SVGs)
+// 4. Assemble staging dir
 const manifest = JSON.parse(readFileSync(join(pkg, "manifest.json"), "utf8"));
 const version = manifest.version;
 const zipName = `omatic-server-${version}-mcp.zip`;
 const stage = mkdtempSync(join(tmpdir(), "omatic-server-mcp-"));
-const mcpServerUrl =
-  manifest.agentConnectors?.[0]?.toolSource?.remoteMcpServer?.mcpServerUrl ||
-  "https://factory.o-matic.ai/mcp";
+const remote = manifest.agentConnectors?.[0]?.toolSource?.remoteMcpServer || {};
+const mcpServerUrl = remote.mcpServerUrl || "https://factory.o-matic.ai/mcp";
+
+if (remote.mcpToolDescription) {
+  console.error(
+    "refusing to build: mcpToolDescription present — dynamic discovery requires it omitted",
+  );
+  process.exit(1);
+}
 
 const files = [
   ["manifest.json", join(pkg, "manifest.json")],
-  ["mcp-tools.json", join(pkg, "mcp-tools.json")],
   ["color.png", join(icons, "color.png")],
   ["outline.png", join(icons, "outline.png")],
 ];
@@ -69,8 +75,14 @@ for (const [name, src] of files) {
   copyFileSync(src, join(stage, name));
 }
 
-// Guard: never ship SVGs or agent files in the zip
-for (const bad of ["declarativeAgent.json", "instructions.txt", "source.svg", "outline-source.svg", "ai-plugin.json"]) {
+for (const bad of [
+  "declarativeAgent.json",
+  "instructions.txt",
+  "source.svg",
+  "outline-source.svg",
+  "ai-plugin.json",
+  "mcp-tools.json",
+]) {
   if (existsSync(join(stage, bad))) {
     console.error(`refusing to package ${bad}`);
     process.exit(1);
@@ -81,7 +93,6 @@ mkdirSync(dist, { recursive: true });
 const zipPath = join(dist, zipName);
 if (existsSync(zipPath)) rmSync(zipPath);
 
-// zip with stored paths at archive root (no nesting)
 run("zip", ["-X", "-j", zipPath, ...files.map(([name]) => join(stage, name))]);
 
 const buf = readFileSync(zipPath);
@@ -97,8 +108,10 @@ const sidecar = {
   connectorId: manifest.agentConnectors?.[0]?.id || "omaticserver",
   displayName: manifest.agentConnectors?.[0]?.displayName || manifest.name?.full,
   mcpServerUrl,
-  toolCount: JSON.parse(readFileSync(join(pkg, "mcp-tools.json"), "utf8")).tools
-    ?.length,
+  discoveryMode: "dynamic",
+  run_for_functions: ["*"],
+  functions: [],
+  mcpToolDescription: "omitted — live tools/list",
   customMcp:
     "Build-time via OMATIC_MCP_URL + OMATIC_OAUTH_REFERENCE_ID (docs/CUSTOM-MCP.md). Schema 1.30 has no runtime URL field.",
   builtAt: new Date().toISOString(),
@@ -106,14 +119,20 @@ const sidecar = {
     "Microsoft 365 admin center → Agents → Tools → Registry → Upload (or Update on an installed package)",
   uploadDoc:
     "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/manage-plugins-skills-mcp-servers",
+  dynamicDiscoveryDoc:
+    "https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/plugin-dynamic-tool-discovery",
   icons: {
     color: {
       file: "color.png",
-      sha256: createHash("sha256").update(readFileSync(join(icons, "color.png"))).digest("hex"),
+      sha256: createHash("sha256")
+        .update(readFileSync(join(icons, "color.png")))
+        .digest("hex"),
     },
     outline: {
       file: "outline.png",
-      sha256: createHash("sha256").update(readFileSync(join(icons, "outline.png"))).digest("hex"),
+      sha256: createHash("sha256")
+        .update(readFileSync(join(icons, "outline.png")))
+        .digest("hex"),
     },
     sources: {
       colorSvg: "icons/source.svg",
@@ -127,10 +146,9 @@ const sidecar = {
 writeFileSync(join(dist, `${zipName}.sha256`), `${sha256}  ${zipName}\n`);
 writeFileSync(join(dist, `${zipName}.json`), JSON.stringify(sidecar, null, 2) + "\n");
 
-// List zip + confirm no svg
 const listed = run("unzip", ["-l", zipPath]).stdout;
-if (/\.svg/i.test(listed)) {
-  console.error("zip unexpectedly contains .svg");
+if (/\.svg/i.test(listed) || /mcp-tools\.json/i.test(listed)) {
+  console.error("zip unexpectedly contains .svg or mcp-tools.json");
   process.exit(1);
 }
 

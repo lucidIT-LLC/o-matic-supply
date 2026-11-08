@@ -2,9 +2,11 @@
 /**
  * Apply package/config.json (+ env overrides) into manifest.json and ai-plugin.json.
  *
- * Default = o-MATIC cloud MCP. Custom factory / MCP URL is first-class at *build*
- * time because Microsoft's agentConnectors.remoteMcpServer.mcpServerUrl is a
- * static HTTPS string in the zip (no runtime URL field in schema 1.30).
+ * Default = o-MATIC cloud MCP with **dynamic tool discovery** (Jimmy 2026-11-07):
+ *   - agentConnectors: omit mcpToolDescription → host calls tools/list
+ *   - ai-plugin: functions=[], run_for_functions=["*"], no mcp_tool_description
+ *
+ * Custom factory / MCP URL is first-class at *build* time (schema pins mcpServerUrl).
  *
  * Env:
  *   OMATIC_MCP_URL              — HTTPS MCP endpoint (default from config.json)
@@ -33,77 +35,101 @@ const oauthReferenceId = (
 ).trim();
 const version = (process.env.OMATIC_VERSION || cfg.version).trim();
 const host = hostnameOf(mcpServerUrl);
-
 const isDefaultCloud = mcpServerUrl === "https://factory.o-matic.ai/mcp";
+const discoveryMode = cfg.discoveryMode || "dynamic";
 
-const manifest = JSON.parse(readFileSync(join(pkg, "manifest.json"), "utf8"));
-manifest.version = version;
-manifest.id = cfg.appId;
-manifest.developer = { ...cfg.developer };
-manifest.name = { ...cfg.name };
-manifest.description = { ...cfg.description };
-if (!isDefaultCloud) {
-  // Custom build: keep names, clarify full description endpoint.
-  manifest.description.full =
-    `o-MATIC Server MCP Connector for Microsoft 365 Copilot. This build targets ${mcpServerUrl} with Entra SSO (OAuthPluginVault). Exposes the full MCP tool surface pinned at build time. Connector only — not a declarative agent.`;
-  manifest.description.short =
-    "Entra SSO MCP connector for an o-MATIC Server factory.";
+if (discoveryMode !== "dynamic") {
+  throw new Error(
+    `discoveryMode must be "dynamic" (Jimmy confirmed tools/list); got ${discoveryMode}`,
+  );
 }
-manifest.accentColor = cfg.accentColor;
-manifest.validDomains = [host];
-manifest.agentConnectors = [
-  {
-    id: cfg.connectorId,
-    displayName: cfg.displayName,
-    description: isDefaultCloud
-      ? cfg.connectorDescription
-      : `o-MATIC Server MCP at ${mcpServerUrl}. Full tool surface. Entra SSO.`,
-    toolSource: {
-      remoteMcpServer: {
-        mcpServerUrl,
-        authorization: {
-          type: "OAuthPluginVault",
-          referenceId: oauthReferenceId,
-        },
-        // Cowork still requires a packaged tool file on 1.29+. Pin the FULL
-        // live tool surface (not a curated subset). Dynamic discovery
-        // (omit mcpToolDescription) is host-dependent and refused here so
-        // Install always exposes every pinned tool after SSO.
-        mcpToolDescription: {
-          file: "mcp-tools.json",
-        },
+
+const description = { ...cfg.description };
+const connectorDescription = isDefaultCloud
+  ? cfg.connectorDescription
+  : `o-MATIC Server MCP at ${mcpServerUrl}. Dynamic tools/list (all live tools). Entra SSO.`;
+if (!isDefaultCloud) {
+  description.short =
+    "Entra SSO MCP connector for an o-MATIC Server factory.";
+  description.full =
+    `o-MATIC Server MCP Connector for Microsoft 365 Copilot. This build targets ${mcpServerUrl} with Entra SSO (OAuthPluginVault). Uses dynamic tool discovery (live tools/list) so Copilot sees every tool that server exposes. Connector only — not a declarative agent.`;
+}
+
+const remoteMcpServer = {
+  mcpServerUrl,
+  authorization: {
+    type: "OAuthPluginVault",
+    referenceId: oauthReferenceId,
+  },
+  // Omit mcpToolDescription → dynamic discovery (manifest 1.29+/1.30).
+  // https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/plugin-dynamic-tool-discovery
+};
+
+const manifest = {
+  $schema:
+    "https://developer.microsoft.com/json-schemas/teams/v1.30/MicrosoftTeams.schema.json",
+  manifestVersion: "1.30",
+  version,
+  id: cfg.appId,
+  developer: { ...cfg.developer },
+  icons: {
+    color: "color.png",
+    outline: "outline.png",
+  },
+  name: { ...cfg.name },
+  description,
+  accentColor: cfg.accentColor,
+  permissions: ["identity"],
+  validDomains: [host],
+  agentConnectors: [
+    {
+      id: cfg.connectorId,
+      displayName: cfg.displayName,
+      description: connectorDescription,
+      toolSource: {
+        remoteMcpServer,
       },
     },
-  },
-];
+  ],
+};
 
 writeFileSync(join(pkg, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 
-const ai = JSON.parse(readFileSync(join(pkg, "ai-plugin.json"), "utf8"));
-ai.name_for_human = cfg.displayName;
-ai.description_for_human = isDefaultCloud
-  ? "o-MATIC Server MCP Connector — full tool surface over Entra SSO."
-  : `o-MATIC Server MCP Connector targeting ${mcpServerUrl} — full tool surface.`;
-ai.namespace = cfg.namespace;
-const runtime = (ai.runtimes || []).find((r) => r.type === "RemoteMCPServer");
-if (!runtime) {
-  throw new Error("ai-plugin.json missing RemoteMCPServer runtime");
-}
-runtime.auth = {
-  type: "OAuthPluginVault",
-  reference_id: oauthReferenceId,
+const ai = {
+  $schema:
+    "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
+  schema_version: "v2.4",
+  name_for_human: cfg.displayName,
+  description_for_human: isDefaultCloud
+    ? "o-MATIC Server MCP Connector — dynamic tools/list over Entra SSO."
+    : `o-MATIC Server MCP Connector targeting ${mcpServerUrl} — dynamic tools/list.`,
+  namespace: cfg.namespace,
+  // Dynamic discovery: empty functions + wildcard run_for_functions.
+  functions: [],
+  runtimes: [
+    {
+      type: "RemoteMCPServer",
+      auth: {
+        type: "OAuthPluginVault",
+        reference_id: oauthReferenceId,
+      },
+      run_for_functions: ["*"],
+      spec: {
+        url: mcpServerUrl,
+        // no mcp_tool_description → resolve tools from the server at runtime
+      },
+    },
+  ],
+  privacy_policy_url: cfg.developer.privacyUrl,
+  legal_info_url: cfg.developer.termsOfUseUrl,
 };
-runtime.spec = runtime.spec || {};
-runtime.spec.url = mcpServerUrl;
-if (runtime.spec.mcp_tool_description) {
-  runtime.spec.mcp_tool_description.file = "mcp-tools.json";
-}
+
 writeFileSync(join(pkg, "ai-plugin.json"), JSON.stringify(ai, null, 2) + "\n");
 
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 packageJson.version = version;
 packageJson.description =
-  "o-MATIC Server MCP Connector — Microsoft 365 Copilot remote MCP (agentConnectors), Entra SSO. Default https://factory.o-matic.ai/mcp; custom URL via OMATIC_MCP_URL at build. Not an agent, not Probot.";
+  "o-MATIC Server MCP Connector — Microsoft 365 Copilot remote MCP (agentConnectors), Entra SSO, dynamic tools/list. Default https://factory.o-matic.ai/mcp; custom URL via OMATIC_MCP_URL at build. Not an agent, not Probot.";
 writeFileSync(join(root, "package.json"), JSON.stringify(packageJson, null, 2) + "\n");
 
 console.log(
@@ -111,11 +137,14 @@ console.log(
     {
       applied: true,
       version,
+      discoveryMode: "dynamic",
       mcpServerUrl,
       host,
       isDefaultCloud,
       displayName: cfg.displayName,
-      toolFile: "mcp-tools.json",
+      run_for_functions: ["*"],
+      functions: [],
+      mcpToolDescription: "omitted (dynamic tools/list)",
     },
     null,
     2,
