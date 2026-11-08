@@ -1,8 +1,8 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
   "schema_version": "v2.4",
-  "name_for_human": "o-MATIC Server",
-  "description_for_human": "o-MATIC Server MCP connector (full tool surface).",
+  "name_for_human": "o-MATIC Server MCP Connector",
+  "description_for_human": "o-MATIC Server MCP Connector — full tool surface over Entra SSO.",
   "namespace": "omaticserver",
   "functions": [
     {
@@ -26,7 +26,7 @@
     },
     {
       "name": "embed_query",
-      "description": "768-d query vector in the corpus vector space. Prefer `search` \u2014 it does this internally and never puts the vector on the wire."
+      "description": "768-d query vector in the corpus vector space. Prefer `search` — it does this internally and never puts the vector on the wire."
     },
     {
       "name": "factory_owner_ddl",
@@ -41,7 +41,7 @@
     },
     {
       "name": "factory_query",
-      "description": "Run one SQL statement against a granted connection, including DDL, writes, and destructive operations. PostgreSQL privileges and constraints apply; the factory's LLM login owns its isolated database. confirm_destructive is accepted for older clients but does not gate execution. Database errors return SQLSTATE only \u2014 the message is withheld because it can quote values from the failing row.",
+      "description": "Run one SQL statement against a granted connection, including DDL, writes, and destructive operations. PostgreSQL privileges and constraints apply; the factory's LLM login owns its isolated database. confirm_destructive is accepted for older clients but does not gate execution. Database errors return SQLSTATE only — the message is withheld because it can quote values from the failing row.",
       "capabilities": {
         "confirmation": {
           "type": "AdaptiveCard",
@@ -217,7 +217,7 @@
     },
     {
       "name": "omatic_guide",
-      "description": "Documentation this server hands out about itself. topic='operating' (default) is the operating guide: the full tool list, how to start a factory, how retrieval is governed, and what a refusal means. topic='architecture' is the architecture description in industry terms \u2014 the three-tier vector memory model, the embedding contract, hybrid retrieval by reciprocal rank fusion, the governance and grant model, the audit trail, and the known gaps. Read 'architecture' when you need to explain or evaluate this system rather than operate it. topic='slate' is the slate.ops/1 operation set: every operation slate_proposal_create accepts, its required and optional arguments, and every reason_code it can refuse with. Read 'slate' before composing a proposal. topic='templates' lists the page templates the server ships; 'project-headquarters' and 'server-closet' explain those two pages; 'upgrade' is the recipe book for a factory upgrade that did not come out clean. 'blueprint' is the factory Blueprint (how a factory is built, governed, certified, installed and upgraded); read it before changing a factory, and 'blueprint-install-upgrade' before fixing an upgrade."
+      "description": "Documentation this server hands out about itself. topic='operating' (default) is the operating guide: the full tool list, how to start a factory, how retrieval is governed, and what a refusal means. topic='architecture' is the architecture description in industry terms — the three-tier vector memory model, the embedding contract, hybrid retrieval by reciprocal rank fusion, the governance and grant model, the audit trail, and the known gaps. Read 'architecture' when you need to explain or evaluate this system rather than operate it. topic='slate' is the slate.ops/1 operation set: every operation slate_proposal_create accepts, its required and optional arguments, and every reason_code it can refuse with. Read 'slate' before composing a proposal. topic='templates' lists the page templates the server ships; 'project-headquarters' and 'server-closet' explain those two pages; 'upgrade' is the recipe book for a factory upgrade that did not come out clean. 'blueprint' is the factory Blueprint (how a factory is built, governed, certified, installed and upgraded); read it before changing a factory, and 'blueprint-install-upgrade' before fixing an upgrade."
     },
     {
       "name": "persona_attest",

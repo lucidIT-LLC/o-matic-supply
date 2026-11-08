@@ -1,0 +1,25 @@
+{
+  "version": "0.1.6",
+  "appId": "6799c907-19f2-49a8-826c-4473bc645d59",
+  "connectorId": "omaticserver",
+  "namespace": "omaticserver",
+  "mcpServerUrl": "https://factory.o-matic.ai/mcp",
+  "oauthReferenceId": "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE=",
+  "displayName": "o-MATIC Server MCP Connector",
+  "name": {
+    "short": "o-MATIC Server MCP Connector",
+    "full": "o-MATIC Server MCP Connector for Microsoft 365 Copilot"
+  },
+  "description": {
+    "short": "Entra SSO MCP connector for o-MATIC Server factories.",
+    "full": "o-MATIC Server MCP Connector for Microsoft 365 Copilot. Default endpoint is https://factory.o-matic.ai/mcp with Entra SSO (OAuthPluginVault). Exposes the full live MCP tool surface. Connector only — not a declarative agent and not a persona. For a customer factory or other HTTPS MCP URL, rebuild with OMATIC_MCP_URL and OMATIC_OAUTH_REFERENCE_ID (see docs/CUSTOM-MCP.md); Microsoft's agentConnectors schema pins mcpServerUrl in the package with no runtime URL field."
+  },
+  "connectorDescription": "Default o-MATIC Server MCP endpoint with Entra SSO. Exposes the full MCP tool surface. Rebuild for a custom factory URL (docs/CUSTOM-MCP.md).",
+  "developer": {
+    "name": "lucidIT, LLC (o-MATIC)",
+    "websiteUrl": "https://lucidit.io",
+    "privacyUrl": "https://lucidit.io/privacy",
+    "termsOfUseUrl": "https://lucidit.io/terms"
+  },
+  "accentColor": "#00B5AD"
+}

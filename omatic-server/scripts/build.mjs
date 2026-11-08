@@ -36,17 +36,23 @@ function run(cmd, args, opts = {}) {
   return r;
 }
 
-// 1. Render icons from SVG sources
+// 1. Apply config.json (+ OMATIC_MCP_URL / OMATIC_OAUTH_REFERENCE_ID) into manifests
+run(process.execPath, [join(root, "scripts/apply-config.mjs")]);
+
+// 2. Render icons from SVG sources
 run(process.execPath, [join(root, "scripts/render-icons.mjs")]);
 
-// 2. Validate sources + rendered icons
+// 3. Validate sources + rendered icons
 run(process.execPath, [join(root, "scripts/validate.mjs")]);
 
-// 3. Assemble staging dir (zip root = package files only; no SVGs)
+// 4. Assemble staging dir (zip root = package files only; no SVGs)
 const manifest = JSON.parse(readFileSync(join(pkg, "manifest.json"), "utf8"));
 const version = manifest.version;
 const zipName = `omatic-server-${version}-mcp.zip`;
 const stage = mkdtempSync(join(tmpdir(), "omatic-server-mcp-"));
+const mcpServerUrl =
+  manifest.agentConnectors?.[0]?.toolSource?.remoteMcpServer?.mcpServerUrl ||
+  "https://factory.o-matic.ai/mcp";
 
 const files = [
   ["manifest.json", join(pkg, "manifest.json")],
@@ -88,11 +94,16 @@ const sidecar = {
   bytes: buf.length,
   contents: files.map(([name]) => name),
   appId: manifest.id,
-  connectorId: "omaticserver",
-  mcpServerUrl: "https://factory.o-matic.ai/mcp",
+  connectorId: manifest.agentConnectors?.[0]?.id || "omaticserver",
+  displayName: manifest.agentConnectors?.[0]?.displayName || manifest.name?.full,
+  mcpServerUrl,
+  toolCount: JSON.parse(readFileSync(join(pkg, "mcp-tools.json"), "utf8")).tools
+    ?.length,
+  customMcp:
+    "Build-time via OMATIC_MCP_URL + OMATIC_OAUTH_REFERENCE_ID (docs/CUSTOM-MCP.md). Schema 1.30 has no runtime URL field.",
   builtAt: new Date().toISOString(),
   uploadPath:
-    "Microsoft 365 admin center → Agents → Tools → Registry → Upload",
+    "Microsoft 365 admin center → Agents → Tools → Registry → Upload (or Update on an installed package)",
   uploadDoc:
     "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/manage-plugins-skills-mcp-servers",
   icons: {

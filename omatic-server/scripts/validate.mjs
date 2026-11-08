@@ -173,27 +173,65 @@ async function main() {
   if (existsSync(join(pkg, "instructions.txt"))) FAIL("instructions.txt must not exist");
   else OK("no instructions.txt");
 
+  const cfg = loadJson(join(pkg, "config.json"));
+  const DEFAULT_URL = "https://factory.o-matic.ai/mcp";
+  const DEFAULT_REF =
+    "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE=";
+
+  // --- naming / description lengths (Teams + agentConnectors schema) ---
+  const shortName = manifest.name?.short || "";
+  const fullName = manifest.name?.full || "";
+  const shortDesc = manifest.description?.short || "";
+  const fullDesc = manifest.description?.full || "";
+  if (shortName.length < 1 || shortName.length > 30) FAIL(`name.short length ${shortName.length} (1–30)`);
+  else OK(`name.short "${shortName}" (${shortName.length}≤30)`);
+  if (fullName.length < 1 || fullName.length > 100) FAIL(`name.full length ${fullName.length} (1–100)`);
+  else OK(`name.full (${fullName.length}≤100)`);
+  if (shortDesc.length < 1 || shortDesc.length > 80) FAIL(`description.short length ${shortDesc.length} (1–80)`);
+  else OK(`description.short (${shortDesc.length}≤80)`);
+  if (fullDesc.length < 1 || fullDesc.length > 4000) FAIL(`description.full length ${fullDesc.length}`);
+  else OK(`description.full (${fullDesc.length}≤4000)`);
+  if (shortDesc === fullDesc) FAIL("description.short and description.full must differ");
+  else OK("description.short ≠ description.full");
+  if (/https?:\/\//i.test(shortDesc)) FAIL("description.short must not contain URLs (validation guidelines)");
+  else OK("description.short has no URL");
+  if (!/MCP Connector/i.test(shortName) || !/MCP Connector/i.test(fullName)) {
+    FAIL('display names must include "MCP Connector" (Jimmy 2026-11-07)');
+  } else OK("rename includes MCP Connector");
+
   // --- agentConnectors remote MCP (portable across Copilot hosts) ---
   const connectors = manifest.agentConnectors;
   if (!Array.isArray(connectors) || connectors.length !== 1) {
-    FAIL("manifest.agentConnectors must have exactly one entry");
+    FAIL("manifest.agentConnectors must have exactly one entry (default connector; custom URL = rebuild)");
   } else {
     const c = connectors[0];
     if (c.id !== "omaticserver") FAIL(`connector id must be omaticserver, got ${c.id}`);
     else OK("connector id omaticserver");
     if (!c.displayName || !c.description) FAIL("connector displayName and description required");
-    else OK("connector displayName + description");
+    else if (c.displayName.length > 128) FAIL("connector displayName > 128");
+    else if (!/MCP Connector/i.test(c.displayName)) FAIL('connector displayName must include "MCP Connector"');
+    else OK(`connector displayName "${c.displayName}"`);
     const remote = c.toolSource?.remoteMcpServer;
     if (!remote) FAIL("toolSource.remoteMcpServer required (connector registration)");
     else {
       if (c.toolSource.plugin || c.toolSource.localMcpServer) {
         FAIL("toolSource must be remoteMcpServer only (one source)");
       } else OK("toolSource is remoteMcpServer only");
-      if (remote.mcpServerUrl !== "https://factory.o-matic.ai/mcp") {
-        FAIL(`mcpServerUrl must be https://factory.o-matic.ai/mcp, got ${remote.mcpServerUrl}`);
-      } else if (!/^https:\/\//i.test(remote.mcpServerUrl)) {
+      if (!remote.mcpServerUrl || !/^https:\/\//i.test(remote.mcpServerUrl)) {
         FAIL("mcpServerUrl must be HTTPS");
-      } else OK("mcpServerUrl https://factory.o-matic.ai/mcp");
+      } else {
+        OK(`mcpServerUrl ${remote.mcpServerUrl}`);
+        if (remote.mcpServerUrl === DEFAULT_URL) OK("default cloud endpoint pinned");
+        else OK("custom MCP URL build (docs/CUSTOM-MCP.md)");
+      }
+      try {
+        const host = new URL(remote.mcpServerUrl).hostname;
+        const domains = manifest.validDomains || [];
+        if (!domains.includes(host)) FAIL(`validDomains must include MCP host ${host}`);
+        else OK(`validDomains includes ${host}`);
+      } catch {
+        FAIL("mcpServerUrl is not a parseable URL");
+      }
       // Copilot Chat rejects missing OAuth; Cowork-only None is a portability trap.
       if (!remote.authorization) FAIL("authorization required (Copilot Chat needs OAuthPluginVault)");
       else if (remote.authorization.type === "None") {
@@ -201,44 +239,59 @@ async function main() {
       } else if (remote.authorization.type !== "OAuthPluginVault") {
         FAIL("authorization.type must be OAuthPluginVault");
       } else OK("OAuthPluginVault (portable: Copilot Chat + Cowork)");
-      const expectedRef =
-        "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE=";
-      if (remote.authorization?.referenceId !== expectedRef) {
-        FAIL("authorization.referenceId is not byte-identical to the Entra SSO registration id");
-      } else OK("referenceId byte-identical to hand-built reference_id");
+      if (!remote.authorization?.referenceId) {
+        FAIL("authorization.referenceId required");
+      } else if (
+        remote.mcpServerUrl === DEFAULT_URL &&
+        remote.authorization.referenceId !== DEFAULT_REF
+      ) {
+        FAIL("default cloud build must keep the Entra SSO registration referenceId");
+      } else if (remote.mcpServerUrl === DEFAULT_URL) {
+        OK("referenceId byte-identical to Foundry Entra SSO registration");
+      } else {
+        OK("custom build referenceId present (must match that factory's Teams SSO registration)");
+      }
       // Cowork still requires mcpToolDescription even on manifest 1.29+.
+      // Jimmy 2026-11-07: expose ALL tools — keep the full pinned surface.
       if (!remote.mcpToolDescription?.file) {
-        FAIL("mcpToolDescription.file required for Cowork + pinned tool surface");
+        FAIL("mcpToolDescription.file required for Cowork + full pinned tool surface");
       } else if (remote.mcpToolDescription.file !== "mcp-tools.json") {
         FAIL("mcpToolDescription.file must be mcp-tools.json");
-      } else OK("mcpToolDescription.file mcp-tools.json (Cowork + pinned tools)");
+      } else OK("mcpToolDescription.file mcp-tools.json (Cowork + full tools)");
     }
   }
 
-  if (manifest.id !== "6799c907-19f2-49a8-826c-4473bc645d59") {
-    FAIL("manifest.id must be app id 6799c907-19f2-49a8-826c-4473bc645d59");
+  if (manifest.id !== cfg.appId) {
+    FAIL(`manifest.id must be app id ${cfg.appId}`);
   } else OK("app id preserved");
 
   // --- ai-plugin RemoteMCPServer source of truth ---
   if (aiPlugin.namespace !== "omaticserver") FAIL("ai-plugin namespace must be omaticserver");
   else OK("ai-plugin namespace omaticserver");
+  if (aiPlugin.name_for_human !== connectors?.[0]?.displayName) {
+    FAIL("ai-plugin name_for_human must match connector displayName");
+  } else OK("ai-plugin name_for_human ↔ connector displayName");
   const runtime = (aiPlugin.runtimes || []).find((r) => r.type === "RemoteMCPServer");
+  const remoteUrl = connectors?.[0]?.toolSource?.remoteMcpServer?.mcpServerUrl;
   if (!runtime) FAIL("ai-plugin missing RemoteMCPServer runtime");
   else {
     OK("ai-plugin RemoteMCPServer runtime present");
     if (runtime.auth?.reference_id !== connectors?.[0]?.toolSource?.remoteMcpServer?.authorization?.referenceId) {
       FAIL("ai-plugin reference_id must match manifest referenceId");
     } else OK("ai-plugin reference_id ↔ manifest referenceId");
-    if (runtime.spec?.url !== "https://factory.o-matic.ai/mcp") FAIL("ai-plugin url mismatch");
-    else OK("ai-plugin url matches");
+    if (runtime.spec?.url !== remoteUrl) FAIL("ai-plugin url must match manifest mcpServerUrl");
+    else OK("ai-plugin url matches mcpServerUrl");
   }
 
-  // --- pin parity (full live MCP surface) ---
+  // --- pin parity (FULL live MCP surface — never a curated subset) ---
   const pinned = runtime?.run_for_functions || [];
   const toolNames = (mcpTools.tools || []).map((t) => t.name);
   const fnNames = (aiPlugin.functions || []).map((f) => f.name);
   if (pinned.length < 1) FAIL("run_for_functions empty");
   else OK(`run_for_functions count=${pinned.length}`);
+  if (pinned.length < 68) {
+    FAIL(`full tool surface required: expected ≥68 live tools, got ${pinned.length}`);
+  } else OK(`full tool surface pinned (${pinned.length} tools, not a curated subset)`);
   if (JSON.stringify(pinned) !== JSON.stringify(toolNames)) {
     FAIL("run_for_functions must match mcp-tools.json names (same order)");
   } else OK("mcp-tools.json names match run_for_functions");
@@ -251,7 +304,7 @@ async function main() {
   OK("function names match ^[A-Za-z0-9_]+$");
   // Soft Microsoft guidance: quality may degrade beyond ~10 tools — report, do not drop.
   if (pinned.length > 10) {
-    OK(`NOTE soft quality guidance: ${pinned.length} tools > ~10 (overview-plugins); none dropped per Jimmy 2026-11-06`);
+    OK(`NOTE soft quality guidance: ${pinned.length} tools > ~10 (overview-plugins); none dropped per Jimmy (full surface)`);
   }
 
   // --- real-validator lint ---

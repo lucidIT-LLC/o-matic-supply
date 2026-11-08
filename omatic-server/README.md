@@ -1,8 +1,8 @@
-# o-MATIC Server — Microsoft 365 Copilot MCP connector
+# o-MATIC Server MCP Connector — Microsoft 365 Copilot
 
-**This is a connector**, not an agent and not a persona. Product name:
-**o-MATIC Server**. Connector id / namespace: `omaticserver`. Never branded
-Probot (Probot is already a separate marketplace listing).
+**This is a connector**, not an agent and not a persona. Display name:
+**o-MATIC Server MCP Connector**. Connector id / namespace: `omaticserver`.
+Never branded Probot (Probot is already a separate marketplace listing).
 
 Microsoft's admin center still calls the uploadable zip a “plugin,” and the
 app-manifest schema field is still named `agentConnectors` — Microsoft's own
@@ -11,20 +11,26 @@ plugin. In o-MATIC language: **connector**. What ships is connection config to
 a remote MCP server; no declarative agent, no instructions, no conversation
 starters.
 
-This Supply package builds the zip an M365 admin uploads so any supported
-Microsoft 365 Copilot experience can call the full live o-MATIC Server MCP
-tool surface on `https://factory.o-matic.ai/mcp` with Entra SSO.
+**0.1.6** defaults to plug-and-play on `https://factory.o-matic.ai/mcp` with
+Entra SSO and the **full** live MCP tool surface. Custom factory / MCP URLs are
+first-class at **build** time (`OMATIC_MCP_URL` — see
+[`docs/CUSTOM-MCP.md`](docs/CUSTOM-MCP.md)); Microsoft's schema pins
+`mcpServerUrl` in the zip (no runtime URL field).
 
 ## What ships
 
 | Item | Value |
 |---|---|
+| Version | **0.1.6** |
+| Display name | **o-MATIC Server MCP Connector** |
 | App id | `6799c907-19f2-49a8-826c-4473bc645d59` |
 | Connector id / namespace | `omaticserver` |
-| MCP URL | `https://factory.o-matic.ai/mcp` |
-| Auth | `OAuthPluginVault` (Entra SSO registration `referenceId`, byte-identical to the hand-built package). Scope is **not** in the zip — it lives on Teams Portal **Microsoft Entra SSO client ID registration**; see [`docs/OAUTH-SCOPE-FIX.md`](docs/OAUTH-SCOPE-FIX.md). |
-| Tools | Full live o-MATIC Server MCP surface (**68** tools pinned). Writes use `capabilities.confirmation.type=AdaptiveCard`; reads omit confirmation. See [`docs/TOOL-CLASSIFICATION.md`](docs/TOOL-CLASSIFICATION.md). |
+| Default MCP URL | `https://factory.o-matic.ai/mcp` |
+| Custom MCP | Rebuild with `OMATIC_MCP_URL` + `OMATIC_OAUTH_REFERENCE_ID` ([`docs/CUSTOM-MCP.md`](docs/CUSTOM-MCP.md)) |
+| Auth | `OAuthPluginVault` (Entra SSO registration `referenceId`). Scope is **not** in the zip — Teams Portal **Microsoft Entra SSO client ID registration**; see [`docs/OAUTH-SCOPE-FIX.md`](docs/OAUTH-SCOPE-FIX.md). |
+| Tools | **Full** live o-MATIC Server MCP surface (**68** tools pinned — not a curated subset). Writes use `capabilities.confirmation.type=AdaptiveCard`; reads omit confirmation. See [`docs/TOOL-CLASSIFICATION.md`](docs/TOOL-CLASSIFICATION.md). |
 | Mark | **Backbone** (Jimmy approved 2026-11-06; Brandy + Monet) |
+| Guidelines | [`docs/GUIDELINES-CHECKLIST-0.1.6.md`](docs/GUIDELINES-CHECKLIST-0.1.6.md) |
 
 ## Works across Copilot hosts (not Cowork-only)
 
@@ -68,27 +74,34 @@ Icons are rendered from committed SVG sources on every build:
 - `icons/source.svg` → `icons/color.png` (192×192)
 - `icons/outline-source.svg` → `icons/outline.png` (32×32)
 
-## Admin-center upload
+## Admin-center Upload / Update
+
+Jimmy already has **0.1.5** installed as Available:
 
 1. Sign in to the Microsoft 365 admin center
-2. **Agents → Tools → Registry**
-3. **Upload** the zip from `dist/`
-4. Review components → **Next**
-5. Scope users → **Install**
+2. **Agents → Tools → Registry** (search **o-MATIC Server MCP Connector** / `omaticserver`)
+3. Open the package → **Update** (or **Upload** if replacing)
+4. Choose `dist/omatic-server-0.1.6-mcp.zip`
+5. Review components (MCP URL + full tool list) → scope users → finish
+
+First-time install: Registry → **Upload** → Install / scope users.
 
 Doc:
 https://learn.microsoft.com/en-us/microsoft-365/admin/manage/manage-plugins-skills-mcp-servers
 
-Structural citations: [`docs/STRUCTURE.md`](docs/STRUCTURE.md).
+**Do not merge this Supply PR until Jimmy approves after trying Update.**
+
+Structural citations: [`docs/STRUCTURE.md`](docs/STRUCTURE.md). Changelog: [`docs/CHANGELOG-0.1.6.md`](docs/CHANGELOG-0.1.6.md).
 
 ## Layout
 
 ```
 omatic-server/
 ├── package/
+│   ├── config.json        # defaults (URL, names, referenceId) — env overrides at build
 │   ├── manifest.json      # Teams/M365 app manifest 1.30 + agentConnectors.remoteMcpServer
 │   ├── ai-plugin.json     # RemoteMCPServer + run_for_functions source of truth (not an agent)
-│   └── mcp-tools.json     # pinned tools/list descriptions
+│   └── mcp-tools.json     # full pinned tools/list descriptions
 ├── icons/
 │   ├── source.svg         # Backbone color (canonical)
 │   ├── outline-source.svg # Backbone outline (canonical)
@@ -96,9 +109,10 @@ omatic-server/
 │   ├── outline.png        # rendered 32×32
 │   └── NOTE.md            # Brandy concept note
 ├── scripts/
+│   ├── apply-config.mjs
 │   ├── render-icons.mjs
 │   ├── validate.mjs
 │   └── build.mjs
-├── docs/STRUCTURE.md
+├── docs/
 └── dist/                  # built zip + sha256
 ```
