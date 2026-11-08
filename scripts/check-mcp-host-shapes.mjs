@@ -130,11 +130,21 @@ export function checkAgentPack(path, label) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  for (const pack of ['wordpress', 'microsoft-365']) {
+  for (const pack of ['wordpress', 'microsoft-365', 'o-matic-server']) {
     const d = resolve(ROOT, pack);
     if (!existsSync(d)) continue;
     if (existsSync(`${d}/.codex-plugin/plugin.json`)) checkCodex(`${d}/.codex-plugin/plugin.json`);
     if (existsSync(`${d}/.cursor-plugin/plugin.json`)) checkCursorPlugin(`${d}/.cursor-plugin/plugin.json`);
+    if (pack === 'o-matic-server') {
+      const portable = resolve(d, 'mcp.json');
+      if (existsSync(portable)) {
+        const p = readJson(portable);
+        const entries = servers(p.mcpServers ?? {});
+        const bad = entries.filter(([, v]) => v.type !== 'streamable-http' || !/^https:\/\//.test(v.url ?? '')).map(([k]) => k);
+        record('Agent Plugins o-matic-server/mcp.json', entries.length > 0 && bad.length === 0,
+          bad.length ? `invalid Streamable HTTP entries: ${bad.join(', ')}` : `${entries.length} HTTPS Streamable HTTP server(s)`);
+      }
+    }
     for (const [file, fn] of [
       ['config/examples/claude-code.mcp.json', checkMcpServersMap],
       ['config/examples/generic-mcp.json', checkMcpServersMap],

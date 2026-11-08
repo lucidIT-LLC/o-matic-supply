@@ -1,18 +1,19 @@
 # Security — o-MATIC Supply
 
-**Read this one properly.** The skill marketplaces are inert text. This pack is
-not: it ships Node MCP servers that execute locally and authenticate to a
-WordPress site on your behalf.
+**Read this one properly.** This pack includes local MCP servers and a remote
+Server connector. The local servers execute on the host; the o-MATIC Server
+plugin connects over HTTPS and delegates authentication and authorization to
+the selected Server.
 
 ## What it does
 
 | Property | Status |
 |---|---|
 | Executes code | **Yes.** Node MCP servers, launched by the host. |
-| Opens network connections | **Yes.** To the WordPress/Elementor site you configure. |
-| Handles credentials | **Yes.** WordPress Application Passwords, supplied by the operator. |
-| Ships credentials | **No.** Nothing is committed here; see `.env.example`. |
-| Talks to third parties | **Yes** — your WordPress site, and nothing else. |
+| Opens network connections | **Yes.** Local connectors reach the configured WordPress/Graph services; the Server plugin reaches the configured o-MATIC Server over HTTPS. |
+| Handles credentials | **Yes.** Local connectors use operator-supplied credentials; the remote Server connection uses the host's OAuth/SSO flow. |
+| Ships credentials | **No.** No bearer token, password, or client secret is packaged. |
+| Talks to third parties | **Yes** — only the service endpoints configured by the user. |
 
 ## Credential handling
 
@@ -23,6 +24,15 @@ WordPress site on your behalf.
 - **Never commit a populated `.env`.** `.env.example` is the template; `.gitignore`
   excludes the real file. If a credential is ever committed, rotate it — history
   is not a secret store.
+- The Server plugin sends the MCP endpoint URL to the chosen host and obtains an
+  OAuth token through that host's sign-in flow. Do not put an access token into
+  the plugin configuration or generated `mcp.json`.
+- Use the official cloud URL by default. For on-prem, verify the HTTPS hostname
+  and reachability before authenticating. Never accept an unexpected endpoint
+  supplied by an untrusted prompt or document.
+- Every host pairing and factory grant remains separate. SSO sign-in does not
+  grant database or factory permissions by itself; the Server evaluates those
+  on each call.
 
 ## TLS
 
