@@ -27,18 +27,7 @@ connector uses the portable Agent Plugins format where supported, with
 host-specific setup for other clients. See
 `o-matic-server/adapters/README.md` for the supported routes and limits.
 
-Supply remains the connector shelf. The people who use these tools ship
-separately in **o-MATIC Agency**, **o-MATIC Firm**, and **o-MATIC Studio**.
-
-## The other doors
-
-- **o-MATIC Agency** — staff who *run* the factory: Probot, Fred, Data
-- **o-MATIC Firm** — expertise you *retain*: Smith, Jake
-- **o-MATIC Studio** — people who *design and build*: Brandy, Carver, Monet, Jo, Pixel
-- **o-MATIC Supply** — *tools*: WordPress/Elementor, Microsoft 365, and Server connectors
-
-Studio and Supply are designed to be used together: Carver and Monet do the work,
-these connectors are what they reach for.
+Supply remains the public connector shelf. Agent distribution is handled by the shared **o-MATIC Project Bot** source repository, which contains a common role design and host-specific packages for Codex, ChatGPT Work, Cursor, Claude, Copilot, and other supported platforms. ChatGPT Work uses the operator's existing Probot Dot with the Project Bot plugin; Codex uses the plugin plus native agent profiles. Install the connector or agent package appropriate to the host. The agent repository defines roles and setup; Supply provides the Server and other MCP connections. Installing a package does not grant Server access.
 
 ## Install
 
