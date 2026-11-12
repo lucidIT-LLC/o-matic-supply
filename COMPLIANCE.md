@@ -7,16 +7,17 @@
 Unlike the o-MATIC skill marketplaces, this pack **does** execute code and
 **does** handle credentials — see `SECURITY.md`. What it does not do is make any
 compliance assertion about doing so. A connector that writes to a WordPress site
-is not a control, and installing it changes nothing about the compliance posture
-of an o-MATIC Factory.
+or calls a remote o-MATIC Server is not itself a compliance control, and
+installing it changes nothing about the compliance posture of a factory.
 
 That is accuracy, not modesty. Compliance properties belong to the system that
 handles data — the **o-MATIC Server** and the **o-MATIC Factory** on it.
 
 - Content it reads and writes is **your** WordPress content. Do not point these
   connectors at a system holding PHI without a review that says you may.
-- Credentials are operator-supplied and host-stored; none ship here.
-- It connects only to the site you configure.
+- Credentials are operator-supplied or authorized through the host's OAuth/SSO
+  flow; none ship here.
+- Each connector connects only to the service endpoint the operator configures.
 
 **The trust boundary is the o-MATIC Server**, not this repository.
 
