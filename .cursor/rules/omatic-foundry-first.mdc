@@ -1,0 +1,14 @@
+---
+description: On o-MATIC Supply work, open o-MATIC Foundry via startup before other factory work
+alwaysApply: true
+---
+
+# o-MATIC Foundry first (Supply)
+
+This repository is **o-MATIC Supply**. Whenever you do Supply work that uses the o-MATIC Server / factory control plane (MCP `o-matic-server`, doctrine, decisions, roster, search, or any factory tool):
+
+1. Call `startup` **first**, with `connection` set exactly to `o-MATIC Foundry` and a stable `conversation_key` for this conversation.
+2. Read `state` on the startup card before trusting anything else from that factory.
+3. Stay on o-MATIC Foundry until the operator names a different factory.
+
+Do not skip Foundry startup to jump straight into `factory_query`, `search`, or other factory tools on a guessed connection. Host-only packaging edits that never touch the factory may proceed without startup; as soon as factory context is needed, open Foundry first.
