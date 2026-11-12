@@ -5,8 +5,9 @@ Supply is **tools, not people**. This plugin ships the Team Assistant MCP connec
 ## Primary path (marketplace plugin)
 
 1. Add this repository as a Cursor plugin marketplace (GitHub: `lucidIT-LLC/o-matic-supply`).
-2. Install the `microsoft-365` plugin. It declares `.cursor-plugin/plugin.json` with `"mcpServers": "./mcp.json"` — stdio server `team-assistant` via `bin/launch.sh`.
-3. Provide an Entra app registration the operator controls (tenant ID + client ID). Sign-in is **delegated device-code** only — every call acts as the signed-in user; credentials never leave the host.
+2. Install the `microsoft-365` plugin at **User** scope, not project scope. User scope is what loads it in any chat and any project. A project install only exists inside that one repo.
+3. Open **Configure** and set `TEAM_ASSISTANT_TENANT_ID` (Directory tenant ID) and `TEAM_ASSISTANT_CLIENT_ID` (Application client ID). Those are not secrets. One user-level Configure applies everywhere. Until both are set, the server stays up and publishes `team_assistant_setup` instead of exiting before tool discovery.
+4. Sign-in is **delegated device-code** only — every call acts as the signed-in user; credentials never leave the host. Start a new chat after Configure so the host reloads the server.
 4. Prefer live MCP tools. Fall back to `adapters/cursor/team-assistant.md` for the condensed method card and Cursor host rules.
 
 ## Prompt substitutes (Claude hooks are absent on Cursor)

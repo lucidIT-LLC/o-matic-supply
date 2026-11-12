@@ -87,7 +87,8 @@ else
             "${HOME:-}"/.fnm/node-versions/*/installation/bin/node \
             "${HOME:-}"/.asdf/installs/nodejs/*/bin/node \
             "${HOME:-}"/Library/Caches/*/node \
-            /snap/bin/node
+            /snap/bin/node \
+            /exec-daemon/node
         do
             if usable_node "$_candidate"; then
                 NODE_BIN=$_candidate
