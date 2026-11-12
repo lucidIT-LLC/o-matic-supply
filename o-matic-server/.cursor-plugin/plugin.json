@@ -1,0 +1,10 @@
+{
+  "name": "o-matic-server",
+  "version": "0.1.0",
+  "description": "Connect an agent to the o-MATIC Server's remote MCP tools through OAuth/SSO.",
+  "author": "o-MATIC AI Research Lab",
+  "homepage": "https://o-matic.ai",
+  "repository": "https://github.com/lucidIT-LLC/o-matic-supply",
+  "license": "BUSL-1.1",
+  "keywords": ["o-matic", "mcp", "factory", "oauth", "sso"]
+}
