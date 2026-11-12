@@ -1,0 +1,18 @@
+{
+  "name": "omatic-server-copilot-mcp",
+  "version": "0.1.7",
+  "private": true,
+  "license": "BUSL-1.1",
+  "description": "o-MATIC Server MCP Connector — Microsoft 365 Copilot remote MCP (agentConnectors), Entra SSO, dynamic tools/list. Default https://factory.o-matic.ai/mcp; custom URL via OMATIC_MCP_URL at build. Not an agent, not Probot.",
+  "type": "module",
+  "scripts": {
+    "apply-config": "node scripts/apply-config.mjs",
+    "render-icons": "node scripts/render-icons.mjs",
+    "validate": "node scripts/validate.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/apply-config.mjs && node scripts/render-icons.mjs && node scripts/validate.mjs"
+  },
+  "engines": {
+    "node": ">=20.10.0"
+  }
+}

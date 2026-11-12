@@ -1,0 +1,36 @@
+{
+  "file": "omatic-server-0.1.5-mcp.zip",
+  "path": "omatic-server/dist/omatic-server-0.1.5-mcp.zip",
+  "version": "0.1.5",
+  "sha256": "fc9337ff6b0123a45932469b9ba704e0e0d24124b3549b892d9b42e26ed9d9ab",
+  "bytes": 30435,
+  "contents": [
+    "manifest.json",
+    "mcp-tools.json",
+    "color.png",
+    "outline.png"
+  ],
+  "appId": "6799c907-19f2-49a8-826c-4473bc645d59",
+  "connectorId": "omaticserver",
+  "mcpServerUrl": "https://factory.o-matic.ai/mcp",
+  "builtAt": "2026-11-06T15:51:45.610Z",
+  "uploadPath": "Microsoft 365 admin center → Agents → Tools → Registry → Upload",
+  "uploadDoc": "https://learn.microsoft.com/en-us/microsoft-365/admin/manage/manage-plugins-skills-mcp-servers",
+  "icons": {
+    "color": {
+      "file": "color.png",
+      "sha256": "f32a99f689b02d907d59f41ed09c9a89c5042f97bbb5daaf9ab47f8b3b43dd71"
+    },
+    "outline": {
+      "file": "outline.png",
+      "sha256": "f5484c1cf7efe91a25f6dd2f03bc31e46876d17ba1ea8df505e45f8b50c9511f"
+    },
+    "sources": {
+      "colorSvg": "icons/source.svg",
+      "outlineSvg": "icons/outline-source.svg",
+      "mark": "Backbone",
+      "approved": "2026-11-06",
+      "decisionId": 848
+    }
+  }
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="o-MATIC Server Backbone mark">
+  <desc>Brandy concept 2 — Backbone. Server Closet / HUD node-edge on teal plate. One gold hub node. Not a locked robot or wordmark.</desc>
+  <rect x="8" y="8" width="80" height="80" rx="14" ry="14" fill="#00B5AD" stroke="#1A1A1A" stroke-width="4"/>
+  <line x1="28" y1="48" x2="48" y2="30" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <line x1="48" y1="30" x2="68" y2="48" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <line x1="28" y1="48" x2="48" y2="66" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <line x1="48" y1="66" x2="68" y2="48" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <line x1="28" y1="48" x2="68" y2="48" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="28" cy="48" r="7.5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5"/>
+  <circle cx="48" cy="30" r="7.5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5"/>
+  <circle cx="48" cy="66" r="7.5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.5"/>
+  <circle cx="68" cy="48" r="9" fill="#FFD33D" stroke="#1A1A1A" stroke-width="2.5"/>
+</svg>

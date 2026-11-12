@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <path fill="#FFFFFF" fill-rule="evenodd" d="
+    M22,12 h52 a14,14 0 0 1 14,14 v52 a14,14 0 0 1 -14,14 h-52 a14,14 0 0 1 -14,-14 v-52 a14,14 0 0 1 14,-14 z
+    M30,20 h36 a6,6 0 0 1 6,6 v36 a6,6 0 0 1 -6,6 h-36 a6,6 0 0 1 -6,-6 v-36 a6,6 0 0 1 6,-6 z
+  "/>
+  <line x1="30" y1="48" x2="48" y2="32" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <line x1="48" y1="32" x2="66" y2="48" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <line x1="30" y1="48" x2="48" y2="64" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <line x1="48" y1="64" x2="66" y2="48" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <line x1="30" y1="48" x2="66" y2="48" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="30" cy="48" r="8" fill="#FFFFFF"/>
+  <circle cx="48" cy="32" r="8" fill="#FFFFFF"/>
+  <circle cx="48" cy="64" r="8" fill="#FFFFFF"/>
+  <circle cx="66" cy="48" r="10" fill="#FFFFFF"/>
+</svg>

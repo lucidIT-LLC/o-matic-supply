@@ -1,0 +1,25 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
+  "schema_version": "v2.4",
+  "name_for_human": "o-MATIC Server MCP Connector",
+  "description_for_human": "o-MATIC Server MCP Connector — dynamic tools/list over Entra SSO.",
+  "namespace": "omaticserver",
+  "functions": [],
+  "runtimes": [
+    {
+      "type": "RemoteMCPServer",
+      "auth": {
+        "type": "OAuthPluginVault",
+        "reference_id": "MmEyNzdiN2UtMzMwYi00MDBlLTgwYmYtNWE5MDZmYzVkNTkxIyNiZWFjMWU2MC00MjgyLTRkM2MtYjNmZS1mOTI5YjJjN2ViMWE="
+      },
+      "run_for_functions": [
+        "*"
+      ],
+      "spec": {
+        "url": "https://factory.o-matic.ai/mcp"
+      }
+    }
+  ],
+  "privacy_policy_url": "https://lucidit.io/privacy",
+  "legal_info_url": "https://lucidit.io/terms"
+}
